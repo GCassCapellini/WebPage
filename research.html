@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research — G. C. Capellini</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Raleway:wght@300;400&display=swap');
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    min-height: 100vh;
+    background: url("1.jpg") center/cover no-repeat fixed;
+    font-family: 'EB Garamond', Georgia, serif;
+    color: #f5f0e8;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      rgba(0,0,0,0.93) 0%,
+      rgba(0,0,0,0.82) 45%,
+      rgba(0,0,0,0.55) 100%
+    );
+    z-index: 0;
+  }
+
+  .site-wrapper { position: relative; z-index: 1; min-height: 100vh; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 64px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .logo {
+    font-family: 'EB Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: #ff8c2a;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 48px; list-style: none; }
+  .nav-links a {
+    font-family: 'Raleway', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.90);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: #ff8c2a; }
+
+  .page-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 64px 100px;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.2s;
+  }
+
+  .sidebar {
+    padding-right: 60px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    padding-top: 8px;
+  }
+  .page-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ff8c2a;
+    margin-bottom: 24px;
+    display: block;
+  }
+  .page-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 32px;
+  }
+  .page-intro {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: rgba(245,240,232,0.70);
+    margin-bottom: 40px;
+  }
+  .prose-link {
+    color: #ff8c2a;
+    text-decoration: none;
+    transition: opacity 0.3s;
+  }
+  .prose-link:hover { opacity: 0.75; }
+
+  .sidebar-nav {
+    list-style: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 24px;
+  }
+  .sidebar-nav li { margin-bottom: 14px; }
+  .sidebar-nav a {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.50);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .sidebar-nav a:hover { color: #ff8c2a; }
+
+  .main-content { padding-left: 64px; }
+
+  .research-section {
+    margin-bottom: 64px;
+    padding-bottom: 64px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .research-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .section-eyebrow {
+    font-family: 'Raleway', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ff8c2a;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .section-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 24px;
+    line-height: 1.2;
+  }
+  .section-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1.80;
+    color: rgba(245,240,232,0.92);
+  }
+  .section-body p { margin-bottom: 18px; }
+  .section-body p:last-child { margin-bottom: 0; }
+  .section-body strong { font-weight: 500; color: #fff; }
+  .section-body em { font-style: italic; color: rgba(245,240,232,0.85); }
+
+  .video-wrap {
+    margin-top: 36px;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .video-wrap iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+  .video-caption {
+    margin-top: 12px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: rgba(245,240,232,0.40);
+    text-transform: uppercase;
+  }
+
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff8c2a 0%, transparent 100%);
+    z-index: 10;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <nav>
+    <a class="logo" href="index.html">G. C. Capellini</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="research.html" class="active">Research</a></li>
+      <li><a href="software.html">Software</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-content">
+
+    <aside class="sidebar">
+      <span class="page-label">Research</span>
+      <h1 class="page-title">Current<br><em>Work</em></h1>
+      <p class="page-intro">
+        For a full description of my research, including publications,
+        please see my <a class="prose-link" href="cv.html">CV</a>.
+      </p>
+      <ul class="sidebar-nav">
+        <li><a href="#group">Research Group</a></li>
+        <li><a href="#outreach">Outreach</a></li>
+        <li><a href="#teaching">Teaching</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+
+      <div class="research-section" id="group">
+        <span class="section-eyebrow">Group</span>
+        <h2 class="section-title">High Energy, Cosmic Rays<br>& Gamma-ray Astronomy</h2>
+        <div class="section-body">
+          <p>
+            I am a member of the <strong>High Energy, Cosmic Rays and Gamma-ray Astronomy Group</strong>
+            led by Prof. Dr. Reinaldo Santos de Lima and Prof. Dr. Maria Victoria del Valle
+            at the Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG-USP),
+            University of São Paulo, Brazil.
+          </p>
+          <p>
+            The group studies topics ranging from turbulence in cosmic-ray acceleration
+            to the modeling of non-thermal emission in astrophysical sources.
+            My research focuses on modeling potential counterparts of unidentified
+            gamma-ray sources detected by the Fermi-LAT satellite.
+          </p>
+        </div>
+      </div>
+
+      <div class="research-section" id="outreach">
+        <span class="section-eyebrow">Outreach</span>
+        <h2 class="section-title">Science Communication</h2>
+        <div class="section-body">
+          <p>
+            I am also interested in science communication and outreach. During my Bachelor's
+            I gave a talk for the general public at an international symposium at the
+            University of São Paulo. I was also an invited speaker in the program
+            <em>Astronomia ao Meio Dia</em> (Astronomy at Noon) at IAG-USP.
+          </p>
+        </div>
+        <div class="video-wrap">
+          <iframe
+            src="https://www.youtube.com/embed/6wT_lKYq5AU"
+            title="Astronomia ao Meio Dia Lecture"
+            allowfullscreen>
+          </iframe>
+        </div>
+        <p class="video-caption">Astronomia ao Meio Dia — IAG-USP</p>
+      </div>
+
+      <div class="research-section" id="teaching">
+        <span class="section-eyebrow">Teaching</span>
+        <h2 class="section-title">Teaching Experience</h2>
+        <div class="section-body">
+          <p>
+            I have experience as a teaching assistant for undergraduate courses at the
+            University of São Paulo. I also taught preparatory physics classes for
+            university entrance examinations in Brazil. For a full description, see my
+            <a class="prose-link" href="cv.html">CV</a>.
+          </p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<div class="bottom-bar"></div>
+</body>
+</html>

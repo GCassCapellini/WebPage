@@ -1,0 +1,199 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+/* ---------- Background ---------- */
+
+.background{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+
+    background:url("1.jpg");
+    background-size:cover;
+    background-position:center;
+
+    z-index:-2;
+}
+
+/* dark overlay for readability */
+
+.background::after{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,0.7);  /* opacity fix */
+
+    z-index:-1;
+}
+
+
+/* ---------- Navbar ---------- */
+
+.navbar{
+    width:1200px;
+    height:80px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.logo{
+    color:#ff7a00;
+    font-size:34px;
+    font-family:'Times New Roman';
+}
+
+/* menu */
+
+.menu ul{
+    display:flex;
+    gap:40px;
+}
+
+.menu ul li{
+    list-style:none;
+}
+
+.menu ul li a{
+    text-decoration:none;
+    color:white;
+    font-size:18px;
+    transition:0.3s;
+}
+
+.menu ul li a:hover{
+    color:#ff7a00;
+}
+
+/* search */
+
+.search{
+    display:flex;
+}
+
+.srch{
+    height:38px;
+    padding:8px;
+    border:1px solid #ff7a00;
+    background:transparent;
+    color:white;
+}
+
+.btn{
+    height:38px;
+    width:90px;
+    background:#ff7a00;
+    border:none;
+    color:white;
+    cursor:pointer;
+}
+
+
+/* ---------- Hero Section ---------- */
+
+.hero{
+    display:flex;
+    align-items:center;
+    height:80vh;
+}
+
+/* glass box */
+
+.hero-box{
+
+    margin-left:120px;
+    max-width:750px;
+
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(6px);
+
+    padding:50px;
+    border-radius:10px;
+
+    color:white;
+    font-family:'Times New Roman';
+}
+
+/* title */
+
+.hero-box h1{
+    font-size:56px;
+    margin-bottom:25px;
+}
+
+/* paragraphs */
+
+.hero-box p{
+    font-size:20px;
+    line-height:1.7;
+    margin-bottom:12px;
+}
+
+.funding{
+    margin-top:20px;
+    font-size:18px;
+    color:#dddddd;
+}
+
+
+/* ================================================= */
+/* ============== DO NOT BREAK RESEARCH PAGE ======= */
+/* ================================================= */
+
+.research-container{
+    max-width:900px;
+    margin:auto;
+    padding-top:120px;
+    padding-bottom:80px;
+    text-align:center;
+    font-family:'Times New Roman';
+}
+
+.intro{
+    font-size:18px;
+    margin-bottom:40px;
+    color:#e6e6e6;
+}
+
+.research-box{
+    background:rgba(0,0,0,0.65);
+    padding:45px;
+    border-radius:12px;
+    text-align:left;
+    line-height:1.7;
+    backdrop-filter:blur(6px);
+}
+
+.research-box h2{
+    text-align:center;
+    margin-bottom:25px;
+    font-size:26px;
+    color:#ff8c00;
+}
+
+.research-box p{
+    margin-bottom:20px;
+    font-size:17px;
+    color:#f0f0f0;
+}
+
+.video-container{
+    margin-top:25px;
+    text-align:center;
+}
+
+.video-container iframe{
+    max-width:100%;
+    border-radius:10px;
+}
+

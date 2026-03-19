@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — G. C. Capellini</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Raleway:wght@300;400&display=swap');
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    min-height: 100vh;
+    background: url("1.jpg") center/cover no-repeat fixed;
+    font-family: 'EB Garamond', Georgia, serif;
+    color: #f5f0e8;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      rgba(0,0,0,0.93) 0%,
+      rgba(0,0,0,0.82) 45%,
+      rgba(0,0,0,0.55) 100%
+    );
+    z-index: 0;
+  }
+
+  .site-wrapper { position: relative; z-index: 1; min-height: 100vh; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 64px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .logo {
+    font-family: 'EB Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: #ff8c2a;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 48px; list-style: none; }
+  .nav-links a {
+    font-family: 'Raleway', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.90);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: #ff8c2a; }
+
+  .page-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 64px 100px;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.2s;
+  }
+
+  .sidebar {
+    padding-right: 60px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    padding-top: 8px;
+  }
+  .page-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ff8c2a;
+    margin-bottom: 24px;
+    display: block;
+  }
+
+  .photo-wrap {
+    position: relative;
+    margin-top: 8px;
+  }
+  .photo-wrap img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 3px;
+    display: block;
+    filter: grayscale(15%) contrast(1.05);
+    border: 1px solid rgba(255,140,42,0.30);
+  }
+  .photo-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
+    pointer-events: none;
+  }
+  .photo-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px 14px 14px;
+    z-index: 1;
+  }
+  .photo-name {
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: 0.04em;
+    display: block;
+  }
+  .photo-role {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ff8c2a;
+    margin-top: 5px;
+    display: block;
+  }
+
+  /* ── Contact block ── */
+  .sidebar-contact {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-contact-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.45);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .sidebar-contact a {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #f5f0e8;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(245,240,232,0.35);
+    padding-bottom: 2px;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .sidebar-contact a:hover { color: #ff8c2a; border-color: #ff8c2a; }
+
+  .main-content { padding-left: 64px; }
+
+  .section-eyebrow {
+    font-family: 'Raleway', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ff8c2a;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .section-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 24px;
+    line-height: 1.2;
+  }
+  .section-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1.80;
+    color: rgba(245,240,232,0.92);
+  }
+  .section-body p { margin-bottom: 18px; }
+  .section-body p:last-child { margin-bottom: 0; }
+  .section-body strong { font-weight: 500; color: #fff; }
+  .section-body em { font-style: italic; color: rgba(245,240,232,0.85); }
+
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff8c2a 0%, transparent 100%);
+    z-index: 10;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <nav>
+    <a class="logo" href="index.html">G. C. Capellini</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="software.html">Software</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-content">
+
+    <aside class="sidebar">
+      <span class="page-label">About</span>
+      <div class="photo-wrap">
+        <img src="foto.jpg" alt="Gabriel Cassoli Capellini">
+        <div class="photo-caption">
+          <span class="photo-name">Gabriel Cassoli Capellini</span>
+          <span class="photo-role">MSc Researcher · IAG-USP</span>
+        </div>
+      </div>
+      <div class="sidebar-contact">
+        <span class="sidebar-contact-label">Contact</span>
+        <a href="https://www.iag.usp.br/astronomia/membros/mestrandos" target="_blank">IAG-USP Members</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div id="bio">
+        <span class="section-eyebrow">Bio</span>
+        <h2 class="section-title">Biography</h2>
+        <div class="section-body">
+          <p>
+            I am a MSc student in Astronomy at the University of São Paulo (USP), Brazil. My research focuses on the
+            modeling of different non-thermal sources in the Galaxy. During my undergraduate studies, I received the
+            FAPESP fellowship to work alongside Prof. Dr. Maria Victoria del Valle on the modeling of non-thermal
+            emission from a variety of astrophysical sources, such as <em>colliding wind binaries, Novae and High Velocity Clouds</em>.
+          </p>
+          <p>
+            My Bachelor thesis explored how T Tauri stars can accelerate particles and produce high-energy non-thermal
+            emission, potentially reducing the number of unidentified sources in the gamma-ray domain, as well as
+            suggesting a new candidate for future observations with next-generation instruments such as the
+            Cherenkov Telescope Array (CTA). For this thesis, I received my undergraduate degree in Astronomy from the
+            University of São Paulo in 2024.
+          </p>
+          <p>
+            At USP I have also been involved in teaching and outreach activities. I was a teaching assistant for the
+            undergraduate courses <em>Introduction to Astronomy I</em> in the first semesters of 2022 and 2024, and
+            <em>High Energy Astrophysics</em> in the second semester of 2024. During the International Symposium of
+            Scientific Initiation (SIICUSP) in 2023, I presented a flash talk about my research for the university community.
+          </p>
+          <p>
+            Currently, my research focuses on the multiwavelength modeling of proto-planetary nebulae
+            as potential counterparts of unidentified gamma-ray sources detected by the Fermi-LAT.
+          </p>
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+<div class="bottom-bar"></div>
+</body>
+</html>
