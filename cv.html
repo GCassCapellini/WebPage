@@ -8,7 +8,23 @@
   @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Raleway:wght@300;400&display=swap');
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
+.img-credit {
+  position: fixed;
+  bottom: 8px;
+  right: 16px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(245,240,232,0.30);
+  z-index: 5;
+}
+.img-credit a {
+  color: rgba(245,240,232,0.30);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(245,240,232,0.15);
+  transition: color 0.3s;
+}
+.img-credit a:hover { color: #ff8c2a; }
   body {
     min-height: 100vh;
     background: url("1.jpg") center/cover no-repeat fixed;
@@ -169,5 +185,11 @@
 
 </div>
 <div class="bottom-bar"></div>
+
+<footer class="img-credit">
+  Background: <a href="https://esawebb.org/images/weic2417a/" target="_blank">ESA/Webb</a>
+  — Credit: NASA, ESA, CSA, STScI, T. Temim (Princeton University)
+</footer>
+
 </body>
 </html>
