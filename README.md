@@ -9,7 +9,7 @@ Personal website built with HTML and CSS.
 - `about.html` — Biography and contact
 - `research.html` — Research group, outreach and teaching
 - `software.html` — Notebooks and tools
-- `cv.html` — Curriculum Vitæ (coming soon)
+- `cv.html` — Curriculum Vitæ 
 
 ## Assets
 
