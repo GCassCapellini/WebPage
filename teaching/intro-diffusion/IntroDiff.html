@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction to Diffusion — Gabriel Cassoli Capellini</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<style>
+  :root{
+    --bg-0: #0d1321;
+    --bg-1: #161d2e;
+    --bg-2: #1d2740;
+    --ink: #f5f7fc;
+    --ink-muted: #b3bcd6;
+    --teal: #57c7b8;
+    --amber: #f2a65a;
+    --rose: #e7677a;
+    --rule: #2a3454;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+  }
+
+  html, body{ background: var(--bg-0); }
+  .reveal-viewport{ background: var(--bg-0) !important; }
+  .reveal .slides section{ background: transparent; }
+
+  .reveal{
+    font-family: var(--font-body);
+    color: var(--ink);
+  }
+  .reveal .slides{ text-align: left; }
+  .reveal .slides section{
+    text-align: left;
+    padding: 30px 50px;
+  }
+  .reveal h1, .reveal h2, .reveal h3, .reveal h4{
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 0.5em;
+  }
+  .reveal h1{ font-size: 3.6em; }
+  .reveal h2{ font-size: 2.9em; color: var(--teal); }
+  .reveal h3{ font-size: 2.2em; color: var(--ink-muted); font-weight: 500; }
+  .reveal p, .reveal li{
+    font-size: 1.85em;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .reveal ul{ margin-left: 0.3em; }
+
+  /* eyebrow label above section-title slides */
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 0.6em;
+    display: block;
+  }
+
+  /* callout boxes, echoing \textcolor{red} / \textcolor{orange} from the LaTeX */
+  .callout{
+    display: inline-block;
+    padding: 16px 22px;
+    border-radius: 10px;
+    font-size: 1.6em;
+    margin: 20px 0;
+    border-left: 4px solid;
+  }
+  .callout.property{
+    background: rgba(87,199,184,0.1);
+    border-color: var(--teal);
+    color: #8fe3d6;
+  }
+  .callout.theorem{
+    background: rgba(242,166,90,0.13);
+    border-color: var(--amber);
+    color: var(--amber);
+    font-family: var(--font-display);
+    font-size: 1.75em;
+    font-weight: 600;
+  }
+
+  .placeholder-box{
+    margin-top: 40px;
+    padding: 28px 32px;
+    border: 1px dashed var(--rule);
+    border-radius: 12px;
+    color: var(--ink-muted);
+    font-size: 1.5em;
+    font-family: var(--font-mono);
+  }
+
+  /* title slide: title left, particle animation fills the entire right half */
+  .reveal .slides section.title-slide{ padding: 0; }
+  .title-flex{
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    width: 100%;
+  }
+  .title-wrap{
+    flex: 0 0 44%;
+    max-width: 44%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 60px;
+  }
+  .title-wrap h1{
+    font-size: 5.6em;
+    line-height: 1.06;
+  }
+  .title-wrap p{ font-size: 1.45em; max-width: 95%; }
+  .title-wrap .eyebrow{ font-size: 0.7em; }
+  .title-wrap .author{
+    margin-top: 34px;
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    color: var(--ink-muted);
+  }
+  #hero-canvas{
+    flex: 1 1 56%;
+    width: 56%;
+    height: 100%;
+    display: block;
+    background: radial-gradient(circle at 50% 50%, rgba(87,199,184,0.08), transparent 70%);
+  }
+
+  /* ---------------- language switcher ---------------- */
+  #lang-switcher{
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    z-index: 1000;
+    font-family: var(--font-body);
+  }
+  #lang-current{
+    display:flex; align-items:center; gap:6px;
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 7px 11px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  #lang-current:hover{ border-color: var(--teal); }
+  #lang-menu{
+    position: absolute; top: 112%; right: 0;
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+    display: none;
+    min-width: 165px;
+    overflow: hidden;
+  }
+  #lang-menu.open{ display: block; }
+  #lang-menu button{
+    width: 100%; display:flex; align-items:center; gap:8px;
+    padding: 9px 12px; border: none; background: none;
+    cursor: pointer; font-size: 13px; text-align: left; color: var(--ink);
+  }
+  #lang-menu button:hover{ background: rgba(87,199,184,0.1); }
+  .flag{ font-size: 17px; line-height: 1; }
+
+  /* ---------------- simulation panel ---------------- */
+  .sim-wrap{ display: flex; gap: 26px; align-items: flex-start; margin-top: 10px; }
+  .sim-controls{
+    width: 840px;
+    height: 200px
+    flex-shrink: 0;
+    background: var(--bg-1);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 22px 24px;
+    font-size: 1.3em;
+  }
+  .sim-controls label{
+    display:block; font-family: var(--font-mono); font-size: 0.85em;
+    color: var(--ink-muted); margin: 14px 0 7px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .sim-controls label:first-child{ margin-top: 0; }
+  .dist-btn{
+    display:block; width: 100%; text-align:left;
+    background: var(--bg-2); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 7px;
+    padding: 7px 10px; margin-bottom: 6px; cursor: pointer;
+    font-size: 0.95em; font-family: var(--font-body);
+  }
+  .dist-btn.active{ border-color: var(--teal); color: var(--teal); background: rgba(87,199,184,0.08); }
+  #n-slider{ width: 100%; accent-color: var(--teal); }
+  #n-value{ font-family: var(--font-mono); color: var(--amber); }
+  .sim-buttons{ display:flex; gap:8px; margin-top: 14px; }
+  .sim-buttons button{
+    flex:1; padding: 8px 6px; border-radius: 7px; border: 1px solid var(--rule);
+    background: var(--bg-2); color: var(--ink); cursor:pointer; font-size: 0.9em;
+  }
+  .sim-buttons button:hover{ border-color: var(--teal); }
+  .sim-buttons button.playing{ border-color: var(--amber); color: var(--amber); }
+  .stat-row{ display:flex; justify-content: space-between; margin-top: 4px; font-family: var(--font-mono); font-size: 0.95em;}
+  .stat-row span:last-child{ color: var(--teal); }
+  #canvas-box{ flex: 1; }
+  #hist-canvas{ width: 100%; height: 360px; display:block; border-radius: 12px; background: var(--bg-1); border: 1px solid var(--rule); }
+
+  ::selection{ background: var(--teal); color: var(--bg-0); }
+</style>
+</head>
+<body>
+
+<!-- ================= language switcher ================= -->
+<div id="lang-switcher">
+  <div id="lang-current" onclick="document.getElementById('lang-menu').classList.toggle('open')">
+    <span class="flag" id="current-flag">🇺🇸</span>
+    <span id="current-label">EN</span>
+    <span style="font-size:10px;">▾</span>
+  </div>
+  <div id="lang-menu">
+    <button onclick="setLang('en')"><span class="flag">🇺🇸</span> English</button>
+    <button onclick="setLang('pt')"><span class="flag">🇧🇷</span> Português</button>
+  </div>
+</div>
+
+<div class="reveal">
+<div class="slides">
+
+  <!-- ============================================================ TITLE ============================================================ -->
+  <section class="title-slide">
+    <div class="title-flex">
+      <div class="title-wrap">
+        <span class="eyebrow" data-i18n="title.eyebrow">Lecture notes</span>
+        <h1 data-i18n="title.main">Introduction to Diffusion</h1>
+        <p data-i18n="title.sub">From the Central Limit Theorem to the diffusion equation, through Einstein's kinetic derivation and physical examples.</p>
+        <div class="author">Gabriel Cassoli Capellini</div>
+      </div>
+      <canvas id="hero-canvas"></canvas>
+    </div>
+  </section>
+
+  <!-- ============================================================ 1. INTRODUÇÃO ============================================================ -->
+  <section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s1">01 — Introduction</span>
+      <h1 data-i18n="s1.title">Introduction</h1>
+      <p data-i18n="s1.p1">In 1828, Robert Brown documented that particles in suspension move irregularly — an effect later called Brownian motion. It remained unexplained until Einstein's 1905 paper.</p>
+      <p data-i18n="s1.p2">Building on statistical mechanics, Einstein showed the motion could be treated probabilistically: it's possible to compute the probability that a particle moves a given distance in a given time.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s1_1">1.1 — The intuition behind diffusion</span>
+      <h2 data-i18n="s1_1.title">The intuition behind diffusion</h2>
+      <p data-i18n="s1_1.p1">During Brownian motion, particles tend to spread until they are distributed ever more uniformly through the medium. If a region I currently holds twice as many particles as a region II, the expected number of particles migrating from I to II will be twice as large as the reverse — not because any single particle behaves differently, but simply because twice as many of them are making the same random attempt.</p>
+      <p data-i18n="s1_1.p2">This is the essence of diffusion, and it's intrinsically tied to Brownian motion — the idea we'll turn into an equation over the next few sections.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s1_sim">1.2 — Simulation</span>
+      <h2 data-i18n="s1_sim.title">Two chambers, one tube</h2>
+      <p data-i18n="s1_sim.intro">Two chambers, A and B, connected by a narrow tube. Particles start as a tight cluster at the center of each chamber. Open the tube and watch the flux argument play out.</p>
+
+      <div class="sim-wrap">
+        <div class="sim-controls">
+          <label data-i18n="ui.na_label">Particles in A: <span id="na-value">500</span></label>
+          <input type="range" id="na-slider" min="50" max="600" value="500" step="10">
+          <label data-i18n="ui.nb_label">Particles in B: <span id="nb-value">100</span></label>
+          <input type="range" id="nb-slider" min="50" max="600" value="100" step="10">
+
+          <div class="sim-buttons" style="margin-top:16px;">
+            <button id="tube-btn" onclick="toggleTube()" data-i18n="ui.open_tube">Open tube</button>
+            <button id="twobox-play-btn" onclick="toggleTwoBoxPlay()" data-i18n="ui.play">Play</button>
+          </div>
+          <div class="sim-buttons">
+            <button onclick="resetTwoBox()" data-i18n="ui.reset">Reset</button>
+          </div>
+
+          <div class="stat-row"><span data-i18n="ui.count_a">Currently in A</span><span id="count-a-value">500</span></div>
+          <div class="stat-row"><span data-i18n="ui.count_b">Currently in B</span><span id="count-b-value">100</span></div>
+        </div>
+        <div id="canvas-box">
+          <canvas id="twobox-canvas" width="700" height="380" style="width:100%;height:380px;display:block;border-radius:12px;background:var(--bg-1);border:1px solid var(--rule);"></canvas>
+          <div style="display:flex;gap:22px;margin-top:10px;font-size:0.55em;color:var(--ink-muted);font-family:var(--font-mono);">
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#57c7b8;margin-right:6px;"></span><span data-i18n="ui.legend_a">Started in A</span></span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f2a65a;margin-right:6px;"></span><span data-i18n="ui.legend_b">Started in B</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s1_2">1.3 — Why a Gaussian, and what's ahead</span>
+      <h2 data-i18n="s1_2.title">Why a Gaussian, and what's ahead</h2>
+      <p data-i18n="s1_2.p1">One of Einstein's results is that the probability density of a particle's displacement takes the shape of a Gaussian curve — a direct consequence of the Central Limit Theorem: the particle's final position is the sum of many independent, identically distributed random "kicks" from surrounding molecules.</p>
+      <p data-i18n="s1_2.p2">These notes follow that logic: first the statistics behind the Gaussian, then Einstein's derivation of the diffusion equation itself, and finally a few physical applications — worked through with live simulations.</p>
+    </section>
+
+  </section>
+
+  <!-- ============================================================ 2. POR QUE UMA GAUSSIANA? ============================================================ -->
+  <section>
+
+    <!-- 2.0 section title -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2">02 — Why a Gaussian?</span>
+      <h1 data-i18n="s2.title">Why a Gaussian?</h1>
+      <p data-i18n="s2.sub">Before writing down the diffusion equation, let's understand why the Gaussian shows up everywhere — starting from the Moment Generating Function.</p>
+    </section>
+
+    <!-- 2.1 MGF: definition + n-th moment, one slide -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_1">2.1 — Moment Generating Function</span>
+      <h2 data-i18n="s2_1.title">What is a Moment Generating Function?</h2>
+      <p data-i18n="s2_1.p1">The Moment Generating Function (MGF) is a function that returns the expected value of \(e^{tX}\). For a discrete random variable, the MGF is a sum:
+      \[ M_X(t) = \sum e^{tX}\,P(X=x). \]</p>
+      <p data-i18n="s2_1.p2">To obtain the n-th moment (\(E[X^n]\)), we take the n-th derivative of the MGF with respect to \(t\), evaluated at \(t=0\):
+      \[ E[X^n] = M_X^{(n)}(0). \]</p>
+    </section>
+
+    <!-- 2.2 proof — slide 1/5: setup -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_2">2.2 — Proof</span>
+      <h2 data-i18n="s2_2.title">Proof</h2>
+      <p data-i18n="s2_2.intro">We now show that the standardized sum of i.i.d. random variables converges to a Gaussian as \(n\to\infty\).</p>
+      <p data-i18n="s2_2a.p1">Consider a data set \(X_i\), \(i=1,\dots,n\), independent and identically distributed. For simplicity, assume the mean is zero and the variance \(\sigma^2\) equals \(1\). The sum of the data can be written as
+      \[ S_n = \sum_{i=1}^{n} X_i. \]
+      Since the data come from the same distribution, their MGF \(m(t)\) is the same.</p>
+      <div class="callout property" data-i18n="s2_2a.property">Property: the MGF of a sum is the product of the MGFs.</div>
+      <p data-i18n="s2_2a.p2">Thus, the MGF of \(S_n\) is \([m(t)]^n\).</p>
+    </section>
+
+    <!-- 2.2 proof — slide 2/5: taylor expansion -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_2">2.2 — Proof</span>
+      <p data-i18n="s2_2b.p1">Let's now take the Taylor expansion of \(m(t)\):
+      \[ m(t) = m(0) + t\,m'(0) + \frac{t^2}{2}m''(0) + O(t^3). \]</p>
+      <p data-i18n="s2_2b.p2">Since \(m(0)=1\), the first derivative of the MGF is the mean (zero here), and the second derivative is the variance (\(1\) here), so:
+      \[ m(t) = 1 + \frac{t^2\sigma^2}{2} + O(t^3). \]</p>
+    </section>
+
+    <!-- 2.2 proof — slide 3/5: standardized variable -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_2">2.2 — Proof</span>
+      <div class="callout property" data-i18n="s2_2c.property">Property: if \(Y = bX\), then \(m_Y(t) = m_X(bt)\).</div>
+      <p data-i18n="s2_2c.p1">Using this property, define \(Z = S_n/(\sigma\sqrt{n})\), so that:
+      \[ m_Z(t) = m_S\!\left(\frac{t}{\sigma\sqrt{n}}\right) = \left[m\!\left(\frac{t}{\sigma\sqrt{n}}\right)\right]^n. \]</p>
+    </section>
+
+    <!-- 2.2 proof — slide 4/5: expansion -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_2">2.2 — Proof</span>
+      <p data-i18n="s2_2d.p1">Expanding \(m(t/\sigma\sqrt{n})\):
+      \[ m\!\left(\frac{t}{\sigma\sqrt{n}}\right) = 1+\frac{1}{2}\frac{\sigma^2 t^2}{\sigma^2 n} + O\!\left(\frac{t^3}{\sigma^3 n^{3/2}}\right) = 1+\frac{t^2}{2n}. \]</p>
+      <p data-i18n="s2_2d.p2">Notice that in the higher-order terms the power of \(n\) grows increasingly large — their contribution vanishes as \(n\to\infty\).</p>
+    </section>
+
+    <!-- 2.2 proof — slide 5/5: limit + conclusion -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_2">2.2 — Proof</span>
+      <p data-i18n="s2_2e.p1">Let's now take the limit \(n\to\infty\) of \(m_Z(t)\):
+      \[ \lim_{n\to\infty} m_Z(t) = \lim_{n\to\infty}\left[1+\frac{t^2}{2n}+\epsilon^3\right]^n = \lim_{n\to\infty}\left(1+\frac{t^2}{2n}\right)^n. \]</p>
+      <p data-i18n="s2_2f.p1">From the definition of the exponential, \(\lim_{n\to\infty}\left(1+\alpha/n\right)^n = e^{\alpha}\), so:
+      \[ \lim_{n\to\infty}\left(1+\frac{t^2}{2n}\right)^n = e^{t^2/2}, \]
+      which is the MGF of the standard normal distribution \(N(0,1)\).</p>
+      <div class="callout theorem" data-i18n="s2_2f.conclusion">This is the Central Limit Theorem.</div>
+    </section>
+
+    <!-- 2.3 example / simulation -->
+    <section>
+      <span class="eyebrow" data-i18n="nav.s2_3">2.3 — Example</span>
+      <h2 data-i18n="s2_3.title">Example</h2>
+      <p data-i18n="s2_3.intro">Pick an initial distribution and watch the standardized sum converge to a Gaussian as N grows.</p>
+
+      <div class="sim-wrap">
+        <div class="sim-controls">
+          <label data-i18n="ui.distribution">Initial distribution</label>
+          <button class="dist-btn active" data-dist="uniform" onclick="selectDist('uniform')" data-i18n="ui.dist_uniform">Uniform [0,1]</button>
+          <button class="dist-btn" data-dist="exponential" onclick="selectDist('exponential')" data-i18n="ui.dist_exponential">Exponential (λ=1)</button>
+          <button class="dist-btn" data-dist="bernoulli" onclick="selectDist('bernoulli')" data-i18n="ui.dist_bernoulli">Bernoulli (coin flip)</button>
+          <button class="dist-btn" data-dist="dice" onclick="selectDist('dice')" data-i18n="ui.dist_dice">Discrete (die, 1–6)</button>
+
+          <label><span data-i18n="ui.n_label">Number of terms</span> N = <span id="n-value">1</span></label>
+          <input type="range" id="n-slider" min="1" max="60" value="1" oninput="onNChange(this.value)">
+
+          <div class="sim-buttons">
+            <button id="resample-btn" onclick="resample()" data-i18n="ui.resample">Resample</button>
+            <button id="play-btn" onclick="togglePlay()" data-i18n="ui.animate">Animate</button>
+          </div>
+
+          <div class="stat-row"><span data-i18n="ui.mean_label">Empirical mean</span><span id="stat-mean">0.000</span></div>
+          <div class="stat-row"><span data-i18n="ui.std_label">Empirical std. dev.</span><span id="stat-std">1.000</span></div>
+        </div>
+        <div id="canvas-box">
+          <canvas id="hist-canvas" width="700" height="360"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </section>
+
+  <!-- ============================================================ 3. A DESCRIÇÃO DE EINSTEIN ============================================================ -->
+  <section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3">03 — Einstein's Description</span>
+      <h1 data-i18n="s3.title">Einstein's Description</h1>
+      <p data-i18n="s3.intro">We now derive the diffusion equation from first principles, following Einstein's 1905 argument: particles move independently, each taking a small step during a short time interval &#964;.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_1">3.1 — The step distribution &#966;(&#956;)</span>
+      <h2 data-i18n="s3_1.title">The step distribution &#966;(&#956;)</h2>
+      <p data-i18n="s3_1.p1">Suppose $N$ particles are suspended in the liquid. During each interval $\tau$, a particle moves a distance $\Delta x=\mu$. The number of particles taking a step between $\mu$ and $\mu+d\mu$ is
+      \[ dN = N\,\phi(\mu)\,d\mu. \]</p>
+      <p data-i18n="s3_1.p2">$\phi(\mu)$ is a probability density, so it must be normalized, $\int_{-\infty}^{+\infty}\phi(\mu)\,d\mu=1$, and by symmetry it is even, $\phi(\mu)=\phi(-\mu)$ — no direction is preferred.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_2">3.2 — &#951;(x,t) and the question</span>
+      <h2 data-i18n="s3_2.title">&#951;(x,t) and the question we want to answer</h2>
+      <p data-i18n="s3_2.p1">Let $\eta(x,t)$ be the number of particles per unit length around position $x$, at time $t$. Unlike $\phi$, $\eta$ is not normalized to $1$ — integrating it over all space gives $N$.</p>
+      <p data-i18n="s3_2.p2">Knowing $\eta(x,t)$, what is the concentration after one more step $\tau$ has elapsed?</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_3">3.3 — Building the equation</span>
+      <h2 data-i18n="s3_3.title">Building the equation</h2>
+      <p data-i18n="s3_3.p1">A particle arriving at $x$ at time $t+\tau$ started somewhere at $x+\mu$ at time $t$, and made exactly the jump needed to land at $x$. Summing this over every possible origin $\mu$:</p>
+      <p class="no-translate" style="text-align:center;">\[ \eta(x,t+\tau) = \int_{-\infty}^{+\infty} \eta(x+\mu,t)\,\phi(\mu)\,d\mu \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_4">3.4 — Two Taylor expansions</span>
+      <h2 data-i18n="s3_4.title">Two Taylor expansions</h2>
+      <p data-i18n="s3_4.p1">$\tau$ is small: expand in time, holding $x$ fixed, to second order:
+      \[ \eta(x,t+\tau)\approx \eta(x,t)+\tau\frac{\partial\eta}{\partial t}+\frac{\tau^2}{2}\frac{\partial^2\eta}{\partial t^2}. \]</p>
+      <p data-i18n="s3_4.p2">$\mu$ is also small: expand in space, holding $t$ fixed, to the same order:
+      \[ \eta(x+\mu,t)\approx \eta(x,t)+\mu\frac{\partial\eta}{\partial x}+\frac{\mu^2}{2}\frac{\partial^2\eta}{\partial x^2}. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_4b">3.4 — Substituting into the integral</span>
+      <h3 data-i18n="s3_4b.title">Substituting into the integral</h3>
+      <p data-i18n="s3_4b.p1">Plug both expansions into $\eta(x,t+\tau)=\int \eta(x+\mu,t)\,\phi(\mu)\,d\mu$. Since $\eta(x,t)$ and its $x$-derivatives don't depend on $\mu$, they come out of the integral:</p>
+      <p class="no-translate" style="text-align:center;">\[ \eta+\tau\frac{\partial\eta}{\partial t}+\frac{\tau^2}{2}\frac{\partial^2\eta}{\partial t^2} = \eta\!\int_{-\infty}^{+\infty}\!\phi(\mu)\,d\mu + \frac{\partial\eta}{\partial x}\!\int_{-\infty}^{+\infty}\!\mu\,\phi(\mu)\,d\mu + \frac{\partial^2\eta}{\partial x^2}\!\int_{-\infty}^{+\infty}\!\frac{\mu^2}{2}\phi(\mu)\,d\mu \]</p>
+      <p data-i18n="s3_4b.p2">Three integrals remain on the right — each one multiplying $\phi(\mu)$ by a different power of $\mu$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_4c">3.4 — Why the middle term vanishes</span>
+      <h3 data-i18n="s3_4c.title">Why the middle term vanishes</h3>
+      <p data-i18n="s3_4c.p1">Look at $\int_{-\infty}^{+\infty}\mu\,\phi(\mu)\,d\mu$. Since $\mu$ is odd and $\phi(\mu)$ is even, their product $\mu\,\phi(\mu)$ is odd — and it's being integrated over the symmetric interval $(-\infty,+\infty)$.</p>
+      <div class="callout property" data-i18n="s3_4c.property">Property: the integral of an odd function over a symmetric interval is zero.</div>
+      <p data-i18n="s3_4c.p2">So the whole middle term vanishes: $\int_{-\infty}^{+\infty}\mu\,\phi(\mu)\,d\mu=0$. This is exactly where "no preferred direction" ($\phi$ even) does its work.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s3_5">3.5 — The diffusion equation</span>
+      <h2 data-i18n="s3_5.title">Assembling the diffusion equation</h2>
+      <p data-i18n="s3_5.p1">What's left: the first integral is $1$ by normalization, the middle term is gone, and the last integral is what we'll call $D$. That gives the generalized diffusion equation
+      \[ \frac{\tau}{2}\frac{\partial^2\eta}{\partial t^2}+\frac{\partial\eta}{\partial t}=D\,\frac{\partial^2\eta}{\partial x^2}, \qquad D=\frac{1}{\tau}\int_{-\infty}^{+\infty}\frac{\mu^2}{2}\phi(\mu)\,d\mu. \]</p>
+      <div class="callout theorem" data-i18n="s3_5.conclusion">In the limit &#964;&#8706;&#178;&#951;/&#8706;t&#178; &#8810; &#8706;&#951;/&#8706;t, this reduces to Einstein's diffusion equation.</div>
+      <p class="no-translate" style="text-align:center;margin-top:14px;">\[ \frac{\partial \eta}{\partial t} = D\,\frac{\partial^2 \eta}{\partial x^2} \]</p>
+    </section>
+
+  </section>
+
+  <!-- ============================================================ 4. APLICAÇÕES ============================================================ -->
+  <section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4">04 — Applications</span>
+      <h1 data-i18n="s4.title">Applications of the Diffusion Problem</h1>
+      <p data-i18n="s4.intro">Two very different physical settings, governed by the same diffusion equation, solved with the same tools — only the initial condition changes.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h2 data-i18n="s4_3.title">The Perfume Case</h2>
+      <p data-i18n="s4_3.p1">Consider a long, narrow room — narrow enough to treat as a line, a one-dimensional problem. At the origin, someone opens a bottle of perfume (or drops a bit of ink into a thin tube of water). At $t=0$, all $N$ molecules sit at that single point.</p>
+      <p data-i18n="s4_3.p2">The question: what is the concentration $\eta(x,t)$ at every point in the room, at every later instant?</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3a.title">The initial condition</h3>
+      <p data-i18n="s4_3a.p1">All particles at one point, at $t=0$, is precisely a Dirac delta:
+      \[ \eta(x,0)=N\delta(x). \]</p>
+      <p data-i18n="s4_3a.p2">Consistent with $\eta$ integrating to $N$: $\int_{-\infty}^{+\infty}N\delta(x)\,dx=N$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3b.title">Why Fourier, and not a guess?</h3>
+      <p data-i18n="s4_3b.p1">Most textbooks simply state the Gaussian solution and check that it works, as if it had been guessed. Instead, notice that $e^{ikx}$ is an eigenfunction of $\partial^2/\partial x^2$:
+      \[ \frac{\partial^2}{\partial x^2}e^{ikx}=-k^2 e^{ikx}. \]</p>
+      <p data-i18n="s4_3b.p2">Decomposing $\eta$ into plane waves turns the PDE — which couples every $x$ together — into independent ODEs, one per mode $k$. That's why Fourier is the natural tool here, not a trick.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3b2.title">A useful analogy: diagonalizing a matrix</h3>
+      <p data-i18n="s4_3b2.p1">Recall solving a linear system of ODEs, $\dot{\mathbf{v}} = A\mathbf{v}$: we diagonalize $A$ using its eigenvectors $\mathbf{e}_i$ (with $A\mathbf{e}_i=\lambda_i\mathbf{e}_i$), write $\mathbf{v}=\sum_i c_i(t)\,\mathbf{e}_i$, and the coupled system decouples into $\dot c_i = \lambda_i c_i$ — one independent scalar equation per eigenvalue.</p>
+      <p data-i18n="s4_3b2.p2">Fourier does exactly this for $\partial^2/\partial x^2$ acting on functions of $x$: its "eigenvectors" are the plane waves $e^{ikx}$, with "eigenvalues" $-k^2$. Decomposing $\eta$ into Fourier modes is diagonalizing an infinite-dimensional operator — same idea, just with the discrete index $i$ replaced by the continuous variable $k$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3c.title">A family of ordinary differential equations</h3>
+      <p data-i18n="s4_3c.p1">Writing $\eta(x,t)$ as a superposition of modes $\eta_k(t)e^{ikx}$, the diffusion equation becomes, mode by mode:
+      \[ \frac{\partial \eta_k}{\partial t} = -Dk^2\,\eta_k, \]</p>
+      <p data-i18n="s4_3c.p2">with immediate solution $\eta_k(t)=\eta_k(0)\,e^{-Dk^2t}$ — sharp, high-$k$ features decay fastest, exactly what smoothing should look like.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3d.title">Applying the initial condition</h3>
+      <p data-i18n="s4_3d.p1">$\eta_k(0)$ comes from transforming $\eta(x,0)$ itself:
+      \[ \eta_k(0) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} \eta(x,0)\,e^{-ikx}\,dx. \]</p>
+      <p data-i18n="s4_3d.p2">For our delta, $\eta(x,0)=N\delta(x)$, so the integral collapses to a single evaluation at $x=0$:
+      \[ \eta_k(0) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} N\delta(x)\,e^{-ikx}\,dx = \frac{N}{\sqrt{2\pi}}. \]</p>
+      <p data-i18n="s4_3d.p3">Flat in $k$ — a delta is the "sharpest" object there is, so it contains every spatial frequency in equal amount.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3e.title">The full mode solution</h3>
+      <p data-i18n="s4_3e.p1">Combining $\eta_k(0)=N/\sqrt{2\pi}$ with the time-dependence $\eta_k(t)=\eta_k(0)e^{-Dk^2t}$ found earlier:</p>
+      <p class="no-translate" style="text-align:center;">\[ \eta_k(t) = \frac{N}{\sqrt{2\pi}}\,e^{-Dk^2t}. \]</p>
+      <p data-i18n="s4_3e.p2">Every mode is now known, at every time. What remains is purely mechanical: undo the transform to get back to $\eta(x,t)$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3f.title">Back to real space</h3>
+      <p data-i18n="s4_3f.p1">By definition, $\eta(x,t)$ is recovered from its modes by the inverse transform:
+      \[ \eta(x,t) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} \eta_k(t)\,e^{ikx}\,dk. \]</p>
+      <p data-i18n="s4_3f.p2">Substituting $\eta_k(t)$ from the previous slide:
+      \[ \eta(x,t) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} \frac{N}{\sqrt{2\pi}}\,e^{-Dk^2t}\,e^{ikx}\,dk = \frac{N}{2\pi}\int_{-\infty}^{+\infty} e^{-Dtk^2+ixk}\,dk. \]</p>
+      <p data-i18n="s4_3f.p3">One integral left to compute — and it's a standard one.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3g.title">Evaluating the Gaussian integral</h3>
+      <p data-i18n="s4_3g.p1">The integral has the standard form $\int_{-\infty}^{+\infty}e^{-ak^2+ibk}\,dk=\sqrt{\pi/a}\;e^{-b^2/4a}$, with $a=Dt$ and $b=x$:</p>
+      <p class="no-translate" style="text-align:center;">\[ \eta(x,t) = \frac{N}{2\pi}\sqrt{\frac{\pi}{Dt}}\;e^{-x^2/4Dt} = \frac{N}{\sqrt{4\pi Dt}}\;e^{-x^2/4Dt}. \]</p>
+      <p data-i18n="s4_3g.p2">This is the closed-form answer — no more transforms, no more integrals left to do.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3h.title">A delta becomes a Gaussian</h3>
+      <p data-i18n="s4_3h.p1">A delta at $t=0$ evolves into a Gaussian that widens as $t$ grows — exactly the shape we'll watch form in the simulation.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_4">4.4 — The Rio Tietê Case</span>
+      <h2 data-i18n="s4_4.title">The Rio Tietê Case</h2>
+      <p data-i18n="s4_4.p1">Now imagine a river, also treated as one-dimensional. A pollutant is dumped uniformly along the entire left bank, giving a step initial condition:</p>
+      <p class="no-translate" style="text-align:center;">\[ \eta(x,0) = \begin{cases}C, & x<0\\0,& x>0\end{cases} \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_4">4.4 — The Rio Tietê Case</span>
+      <h3 data-i18n="s4_4pde.title">The diffusion equation, once more</h3>
+      <p data-i18n="s4_4pde.p1">Whatever the initial condition, the concentration still obeys the same equation we derived earlier from Einstein's argument:</p>
+      <p class="no-translate" style="text-align:center;">\[ \frac{\partial \eta}{\partial t} = D\,\frac{\partial^2 \eta}{\partial x^2} \]</p>
+      <p data-i18n="s4_4pde.p2">The only thing that changes from problem to problem is $\eta(x,0)$. Is there a way to solve for any initial condition, once and for all?</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_4">4.4 — The Rio Tietê Case</span>
+      <h3 data-i18n="s4_4hook.title">Since the equation is linear...</h3>
+      <p data-i18n="s4_4hook.p1">The diffusion equation is linear: if $\eta_1$ and $\eta_2$ are both solutions, so is any combination $a\eta_1+b\eta_2$. That suggests we could build the step's solution out of solutions we already know, superposed together.</p>
+      <p data-i18n="s4_4hook.p2">This idea — solve a linear equation once for a point source, then superpose — has a name: the Green's function. But what exactly is a Green's function?</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf">4.4 — What is a Green's function?</span>
+      <h3 data-i18n="s4_gf1.title">What is a Green's function?</h3>
+      <p data-i18n="s4_gf1.p1">Given a linear differential operator $L$ acting on functions over a domain $\Omega$, the Green's function $G=G(y,s)$ at the point $s\in\Omega$ is any solution of
+      \[ L\,G(y,s) = \delta(y-s). \]</p>
+      <p data-i18n="s4_gf1.p2">In words: $G(y,s)$ is the system's response, measured at $y$, to a unit point impulse placed at $s$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf">4.4 — Why bother? Superposition</span>
+      <h3 data-i18n="s4_gf1b.title">Why bother? Superposition</h3>
+      <p data-i18n="s4_gf1b.p1">Multiply both sides by an arbitrary function $f(s)$ and integrate over $s$:
+      \[ \int L\,G(y,s)\,f(s)\,ds = \int \delta(y-s)\,f(s)\,ds = f(y). \]</p>
+      <p data-i18n="s4_gf1b.p2">Since $L$ acts on $y$, not $s$, it can be pulled outside the integral on the left: $L\left[\int G(y,s)\,f(s)\,ds\right] = f(y)$. So for the equation $Lu(y)=f(y)$, the solution is
+      \[ u(y) = \int G(y,s)\,f(s)\,ds. \]</p>
+      <p data-i18n="s4_gf1b.p3">Solve once, for a point impulse — and you've solved it for every source $f$, for free.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf1c">4.4 — No source, just an initial profile</span>
+      <h3 data-i18n="s4_gf1c.title">The homogeneous case, with initial data</h3>
+      <p data-i18n="s4_gf1c.p1">Now suppose there's no source at all ($f=0$), just a homogeneous equation $Lu=0$ with a nonzero initial profile $u(x,0)=u_0(x)$. Writing $y=(x,t)$ and $s=(\xi,\tau)$ for space-time points, our operator is
+      \[ L = \partial_t - D\,\partial_x^2. \]</p>
+      <p data-i18n="s4_gf1c.p2">To handle this case we need the adjoint operator $L^*$, defined so that $\int\!\!\int\big[v\,Lu - u\,L^*v\big]\,d\xi\,d\tau$ equals only boundary terms. Integrating by parts once in $\tau$ (flipping a sign) and twice in $\xi$ (no sign flip) gives
+      \[ L^*v = -\partial_\tau v - D\,\partial_\xi^2 v. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf1d">4.4 — Opening the boundary terms</span>
+      <h3 data-i18n="s4_gf1d.title">Opening the boundary terms</h3>
+      <p data-i18n="s4_gf1d.p1">Define $G(y,s)$ by $L^*_sG(y,s)=\delta(y-s)$, and plug $v=G(y,s)$, $u=\eta(s)$ into the identity, integrating $\xi$ over the line and $\tau$ from $0$ to $t$. Since $L\eta=0$ and $L^*_sG=\delta(y-s)$, the left side collapses to $-\eta(x,t)$.</p>
+      <p data-i18n="s4_gf1d.p2">The right side splits into two pieces: a temporal boundary term at $\tau=0$ and $\tau=t$ (from integrating by parts in $\tau$), and a spatial term at $\xi\to\pm\infty$ (from the double integration by parts in $\xi$). The spatial term vanishes — both $\eta$ and $G$ decay at infinity — leaving
+      \[ -\eta(x,t) = \int_{-\infty}^{+\infty}\!\Big[G(y,(\xi,t))\,\eta(\xi,t) - G(y,(\xi,0))\,\eta(\xi,0)\Big]\,d\xi. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf1e">4.4 — Causality: only t=0 survives</span>
+      <h3 data-i18n="s4_gf1e.title">Causality: only t=0 survives</h3>
+      <p data-i18n="s4_gf1e.p1">The $\tau=t$ term vanishes by definition of the retarded Green's function: effects can't precede causes, so $G(y,(\xi,t))\equiv0$ at the observation instant itself — consistent with the Gaussian only "switching on" in the limit $\tau\to t^-$.</p>
+      <p data-i18n="s4_gf1e.p2">What's left is exactly the propagation formula we wanted:
+      \[ \eta(x,t) = \int_{-\infty}^{+\infty} G(y,(\xi,0))\,u_0(\xi)\,d\xi. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf">4.4 — What is a Green's function?</span>
+      <h3 data-i18n="s4_gf2.title">The Green's function of our diffusion equation</h3>
+      <p data-i18n="s4_gf2.p1">We already solved for the response to a unit point source at the origin — that's exactly the perfume problem with $N=1$:
+      \[ G(x,t;0,0) = \frac{1}{\sqrt{4\pi Dt}}\,e^{-x^2/4Dt}. \]</p>
+      <p data-i18n="s4_gf2.p2">Since $D$ is constant, the problem is invariant under translations in space and time: $G(x,t;\xi,\tau)=G(x-\xi,\,t-\tau)$. Setting $\tau=0$ gives exactly the propagator we need:
+      \[ G(x-x',t) = \frac{1}{\sqrt{4\pi Dt}}\,e^{-(x-x')^2/4Dt}. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_gf">4.4 — Solving by superposition</span>
+      <h3 data-i18n="s4_super.title">Solving the Rio Tietê by superposition</h3>
+      <p data-i18n="s4_super.p1">Any initial condition is a sum of point sources, each weighted by how much concentration was actually there:
+      \[ \eta(x,t)=\int_{-\infty}^{+\infty}\eta(x',0)\,G(x-x',t)\,dx'. \]</p>
+      <p data-i18n="s4_super.p2">For the step, only $x'<0$ contributes, where $\eta(x',0)=C$:
+      \[ \eta(x,t) = C\int_{-\infty}^{0} G(x-x',t)\,dx'. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_4">4.4 — The Rio Tietê Case</span>
+      <h3 data-i18n="s4_4a.title">Solving for the step</h3>
+      <p data-i18n="s4_4a.p1">Only $x'<0$ contributes. Substituting $w=(x-x')/\sqrt{4Dt}$ turns the integral into the complementary error function:
+      \[ \eta(x,t) = \frac{C}{2}\,\mathrm{erfc}\!\left(\frac{x}{\sqrt{4Dt}}\right) = \frac{C}{2}\left[1-\mathrm{erf}\!\left(\frac{x}{\sqrt{4Dt}}\right)\right]. \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_4">4.4 — The Rio Tietê Case</span>
+      <h3 data-i18n="s4_4b.title">Does it make sense?</h3>
+      <p data-i18n="s4_4b.p1">$t\to 0$: $\mathrm{erf}(\mp\infty)=\mp1$, recovering the sharp step ($C$ for $x<0$, $0$ for $x>0$). $t\to\infty$: $\mathrm{erf}(0)=0$, so $\eta\to C/2$ everywhere — full mixing.</p>
+      <p data-i18n="s4_4b.p2">Same diffusion equation, same Green's function, a very different-looking result: a step smooths into an S-curve instead of a peak spreading outward.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_exp">4.5 — The Exponential Case</span>
+      <h2 data-i18n="s4_exp.title">A Third Case: Exponential Decay</h2>
+      <p data-i18n="s4_exp.p1">A quick conceptual note first. Linearity means $a\eta_1+b\eta_2$ is a solution whenever $\eta_1,\eta_2$ are — but that does not mean every new solution is a finite combination of just the Gaussian and the erfc we've found so far. What actually guarantees it is stronger: any $\eta_0(x)$ is a continuous superposition of deltas, so by linearity its solution is the same superposition of $G(x-x',t)$'s. $G$ is the building block — the Gaussian and the erfc are themselves already superpositions of it.</p>
+      <p data-i18n="s4_exp.p2">Consider a pollutant dumped only on the bank $x>0$, already decaying exponentially with distance:
+      \[ \eta(x,0)=\eta_0(x) = \begin{cases} e^{-x}, & x>0 \\ 0, & x<0. \end{cases} \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_exp">4.5 — The Exponential Case</span>
+      <h3 data-i18n="s4_exp2.title">Setting up the convolution</h3>
+      <p data-i18n="s4_exp2.p1">Same recipe as always — plug $\eta_0$ into the propagation formula, integrating only over $x'>0$ where $\eta_0(x')=e^{-x'}$:
+      \[ \eta(x,t) = \int_0^{+\infty} e^{-x'}\,\frac{1}{\sqrt{4\pi Dt}}\,e^{-(x-x')^2/4Dt}\,dx'. \]</p>
+      <p data-i18n="s4_exp2.p2">The trick, as always with these Gaussian integrals: combine both exponents and complete the square in $x'$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_exp">4.5 — The Exponential Case</span>
+      <h3 data-i18n="s4_exp3.title">Completing the square</h3>
+      <p data-i18n="s4_exp3.p1">Combining the two exponents and completing the square in $x'$:
+      \[ -x' - \frac{(x-x')^2}{4Dt} = (Dt-x) \;-\; \frac{\big[x'-(x-2Dt)\big]^2}{4Dt}. \]</p>
+      <p data-i18n="s4_exp3.p2">The part that only depends on $x$ and $t$ pulls out of the integral; what's left inside is a plain Gaussian centered at $x-2Dt$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_exp">4.5 — The Exponential Case</span>
+      <h3 data-i18n="s4_exp4.title">The result</h3>
+      <p data-i18n="s4_exp4.p1">Substituting $w=[x'-(x-2Dt)]/\sqrt{4Dt}$ turns the remaining integral into an $\mathrm{erfc}$, exactly as in the Rio Tietê case:
+      \[ \eta(x,t) = \frac{1}{2}\,e^{\,Dt-x}\;\mathrm{erfc}\!\left(\frac{2Dt-x}{2\sqrt{Dt}}\right). \]</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_exp">4.5 — The Exponential Case</span>
+      <h3 data-i18n="s4_exp5.title">Does it recover the initial condition?</h3>
+      <p data-i18n="s4_exp5.p1">As $t\to0^+$: for $x>0$ the erfc argument goes to $-\infty$, so $\mathrm{erfc}\to2$ and $\eta\to e^{-x}$; for $x<0$ it goes to $+\infty$, so $\mathrm{erfc}\to0$ and $\eta\to0$. Both limits match $\eta_0(x)$ exactly.</p>
+      <p data-i18n="s4_exp5.p2">Notice the pattern across all three cases: the same $G(x-x',t)$ sits inside every integral — only the support and weight $\eta_0(x')$ change. That universality of $G$, not a coincidence of final forms, is what makes the Green's-function approach worth the setup.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_av">4.6 — Estimating Avogadro's Number</span>
+      <h2 data-i18n="s4_av.title">Estimating Avogadro's Number</h2>
+      <p data-i18n="s4_av.p1">One of the most interesting applications of Einstein's approach is estimating Avogadro's number directly from the statistics of Brownian motion.</p>
+      <p data-i18n="s4_av.p2">Dividing $\eta(x,t)$ by the total number of particles $N$ gives the probability of finding a particle between $x$ and $x+dx$, given that it started at the origin:
+      \[ P(x,t) = \frac{\eta(x,t)}{N} = \frac{1}{\sqrt{4\pi Dt}}\,e^{-x^2/4Dt}. \]</p>
+      <p data-i18n="s4_av.p3">A Gaussian with mean $\langle x\rangle=0$ and variance $\sigma^2=2Dt$.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_av">4.6 — Estimating Avogadro's Number</span>
+      <h3 data-i18n="s4_av1.title">Mean squared displacement</h3>
+      <p data-i18n="s4_av1.p1">Computing the mean squared displacement directly from $P(x,t)$:
+      \[ \langle x^2\rangle = \frac{2}{\sqrt{4\pi Dt}}\int_0^{\infty} x^2\,e^{-x^2/4Dt}\,dx = 2Dt. \]</p>
+      <p data-i18n="s4_av1.p2">Known as Einstein's relation — the average squared distance a particle wanders grows linearly with time, not with time squared as ballistic motion would predict.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_av">4.6 — Estimating Avogadro's Number</span>
+      <h3 data-i18n="s4_av2.title">From D to Avogadro's number</h3>
+      <p data-i18n="s4_av2.p1">For spherical particles of radius $a$, Stokes' law gives the diffusion coefficient:
+      \[ D = \frac{k_B T}{6\pi\gamma a}. \]</p>
+      <p data-i18n="s4_av2.p2">Substituting into the mean squared displacement:
+      \[ \langle x^2\rangle = \frac{RT}{3\pi N_a\,\gamma a}\,t \;\propto\; t. \]</p>
+      <p data-i18n="s4_av2.p3">Since $\langle x^2\rangle$, $t$, $\gamma$, and $a$ are all directly measurable — with a stopwatch and a microscope, as Perrin did — this expression lets us solve for $N_a$: a statistical argument about random walks turned into one of the first direct measurements of Avogadro's number.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_5">4.7 — Simulation</span>
+      <h2 data-i18n="s4_5.title">Watching diffusion happen</h2>
+      <p data-i18n="s4_5.intro">A 1D random walk: every particle steps &#177;s at each tick. Toggle the initial condition and watch the histogram converge to the curve derived above.</p>
+
+      <div class="sim-wrap">
+        <div class="sim-controls">
+          <label data-i18n="ui.ic_label">Initial condition</label>
+          <button class="dist-btn active" data-ic="delta" onclick="selectIC('delta')" data-i18n="ui.ic_delta">Point source (perfume)</button>
+          <button class="dist-btn" data-ic="step" onclick="selectIC('step')" data-i18n="ui.ic_step">Uniform half (Rio Tiet&#234;)</button>
+          <button class="dist-btn" data-ic="exponential" onclick="selectIC('exponential')" data-i18n="ui.ic_exponential">Exponential decay (Rio Tiet&#234;)</button>
+
+          <div class="sim-buttons" style="margin-top:16px;">
+            <button id="diff-play-btn" onclick="toggleDiffPlay()" data-i18n="ui.play">Play</button>
+            <button onclick="resetDiff()" data-i18n="ui.reset">Reset</button>
+          </div>
+
+          <div class="stat-row"><span data-i18n="ui.t_label">Elapsed steps (t)</span><span id="diff-t-value">0</span></div>
+        </div>
+        <div id="canvas-box">
+          <canvas id="particle-canvas" width="700" height="130" style="width:100%;height:130px;display:block;border-radius:12px;background:var(--bg-1);border:1px solid var(--rule);margin-bottom:14px;"></canvas>
+          <canvas id="diff-hist-canvas" width="700" height="300" style="width:100%;height:300px;display:block;border-radius:12px;background:var(--bg-1);border:1px solid var(--rule);"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    controls: true,
+    progress: true,
+    slideNumber: 'c/t',
+    center: false,
+    width: 1300,
+    height: 900,
+    transition: 'slide',
+    backgroundTransition: 'fade'
+  }).then(() => {
+    renderMath();
+  });
+
+  function renderMath(){
+    renderMathInElement(document.querySelector('.reveal'), {
+      delimiters: [
+        {left: '\\[', right: '\\]', display: true},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false
+    });
+  }
+</script>
+
+<!-- ============================================================ i18n ============================================================ -->
+<script>
+  const translations = {
+    en: {
+      "title.eyebrow": "Lecture notes",
+      "title.main": "Introduction to Diffusion",
+      "title.sub": "From the Central Limit Theorem to the diffusion equation, through Einstein's kinetic derivation and physical examples.",
+
+      "nav.s1": "01 — Introduction",
+      "s1.title": "Introduction",
+      "s1.p1": "In 1828, Robert Brown documented that particles in suspension move irregularly — an effect later called Brownian motion. It remained unexplained until Einstein's 1905 paper.",
+      "s1.p2": "Building on statistical mechanics, Einstein showed the motion could be treated probabilistically: it's possible to compute the probability that a particle moves a given distance in a given time.",
+
+      "nav.s1_1": "1.1 — The intuition behind diffusion",
+      "s1_1.title": "The intuition behind diffusion",
+      "s1_1.p1": "During Brownian motion, particles tend to spread until they are distributed ever more uniformly through the medium. If a region I currently holds twice as many particles as a region II, the expected number of particles migrating from I to II will be twice as large as the reverse — not because any single particle behaves differently, but simply because twice as many of them are making the same random attempt.",
+      "s1_1.p2": "This is the essence of diffusion, and it's intrinsically tied to Brownian motion — the idea we'll turn into an equation over the next few sections.",
+
+      "nav.s1_sim": "1.2 — Simulation",
+      "s1_sim.title": "Two chambers, one tube",
+      "s1_sim.intro": "Two chambers, A and B, connected by a narrow tube. Particles start as a tight cluster at the center of each chamber. Open the tube and watch the flux argument play out.",
+
+      "ui.na_label": "Particles in A:",
+      "ui.nb_label": "Particles in B:",
+      "ui.open_tube": "Open tube",
+      "ui.close_tube": "Close tube",
+      "ui.count_a": "Currently in A",
+      "ui.count_b": "Currently in B",
+      "ui.legend_a": "Started in A",
+      "ui.legend_b": "Started in B",
+
+      "nav.s1_2": "1.3 — Why a Gaussian, and what's ahead",
+      "s1_2.title": "Why a Gaussian, and what's ahead",
+      "s1_2.p1": "One of Einstein's results is that the probability density of a particle's displacement takes the shape of a Gaussian curve — a direct consequence of the Central Limit Theorem: the particle's final position is the sum of many independent, identically distributed random \"kicks\" from surrounding molecules.",
+      "s1_2.p2": "These notes follow that logic: first the statistics behind the Gaussian, then Einstein's derivation of the diffusion equation itself, and finally a few physical applications — worked through with live simulations.",
+
+      "nav.s2": "02 — Why a Gaussian?",
+      "s2.title": "Why a Gaussian?",
+      "s2.sub": "Before writing down the diffusion equation, let's understand why the Gaussian shows up everywhere — starting from the Moment Generating Function.",
+
+      "nav.s2_1": "2.1 — Moment Generating Function",
+      "s2_1.title": "What is a Moment Generating Function?",
+      "s2_1.p1": "The Moment Generating Function (MGF) is a function that returns the expected value of \\(e^{tX}\\). For a discrete random variable, the MGF is a sum: \\[ M_X(t) = \\sum e^{tX}\\,P(X=x). \\]",
+      "s2_1.p2": "To obtain the n-th moment (\\(E[X^n]\\)), we take the n-th derivative of the MGF with respect to \\(t\\), evaluated at \\(t=0\\): \\[ E[X^n] = M_X^{(n)}(0). \\]",
+
+      "nav.s2_2": "2.2 — Proof",
+      "s2_2.title": "Proof",
+      "s2_2.intro": "We now show that the standardized sum of i.i.d. random variables converges to a Gaussian as \\(n\\to\\infty\\).",
+
+      "s2_2a.p1": "Consider a data set \\(X_i\\), \\(i=1,\\dots,n\\), independent and identically distributed. For simplicity, assume the mean is zero and the variance \\(\\sigma^2\\) equals \\(1\\). The sum of the data can be written as \\[ S_n = \\sum_{i=1}^{n} X_i. \\] Since the data come from the same distribution, their MGF \\(m(t)\\) is the same.",
+      "s2_2a.property": "Property: the MGF of a sum is the product of the MGFs.",
+      "s2_2a.p2": "Thus, the MGF of \\(S_n\\) is \\([m(t)]^n\\).",
+
+      "s2_2b.p1": "Let's now take the Taylor expansion of \\(m(t)\\): \\[ m(t) = m(0) + t\\,m'(0) + \\frac{t^2}{2}m''(0) + O(t^3). \\]",
+      "s2_2b.p2": "Since \\(m(0)=1\\), the first derivative of the MGF is the mean (zero here), and the second derivative is the variance (\\(1\\) here), so: \\[ m(t) = 1 + \\frac{t^2\\sigma^2}{2} + O(t^3). \\]",
+
+      "s2_2c.property": "Property: if \\(Y = bX\\), then \\(m_Y(t) = m_X(bt)\\).",
+      "s2_2c.p1": "Using this property, define \\(Z = S_n/(\\sigma\\sqrt{n})\\), so that: \\[ m_Z(t) = m_S\\!\\left(\\frac{t}{\\sigma\\sqrt{n}}\\right) = \\left[m\\!\\left(\\frac{t}{\\sigma\\sqrt{n}}\\right)\\right]^n. \\]",
+
+      "s2_2d.p1": "Expanding \\(m(t/\\sigma\\sqrt{n})\\): \\[ m\\!\\left(\\frac{t}{\\sigma\\sqrt{n}}\\right) = 1+\\frac{1}{2}\\frac{\\sigma^2 t^2}{\\sigma^2 n} + O\\!\\left(\\frac{t^3}{\\sigma^3 n^{3/2}}\\right) = 1+\\frac{t^2}{2n}. \\]",
+      "s2_2d.p2": "Notice that in the higher-order terms the power of \\(n\\) grows increasingly large — their contribution vanishes as \\(n\\to\\infty\\).",
+
+      "s2_2e.p1": "Let's now take the limit \\(n\\to\\infty\\) of \\(m_Z(t)\\): \\[ \\lim_{n\\to\\infty} m_Z(t) = \\lim_{n\\to\\infty}\\left[1+\\frac{t^2}{2n}+\\epsilon^3\\right]^n = \\lim_{n\\to\\infty}\\left(1+\\frac{t^2}{2n}\\right)^n. \\]",
+
+      "s2_2f.p1": "From the definition of the exponential, \\(\\lim_{n\\to\\infty}\\left(1+\\alpha/n\\right)^n = e^{\\alpha}\\), so: \\[ \\lim_{n\\to\\infty}\\left(1+\\frac{t^2}{2n}\\right)^n = e^{t^2/2}, \\] which is the MGF of the standard normal distribution \\(N(0,1)\\).",
+      "s2_2f.conclusion": "This is the Central Limit Theorem.",
+
+      "nav.s2_3": "2.3 — Example",
+      "s2_3.title": "Example",
+      "s2_3.intro": "Pick an initial distribution and watch the standardized sum converge to a Gaussian as N grows.",
+
+      "ui.distribution": "Initial distribution",
+      "ui.dist_uniform": "Uniform [0,1]",
+      "ui.dist_exponential": "Exponential (λ=1)",
+      "ui.dist_bernoulli": "Bernoulli (coin flip)",
+      "ui.dist_dice": "Discrete (die, 1–6)",
+      "ui.n_label": "Number of terms",
+      "ui.resample": "Resample",
+      "ui.animate": "Animate",
+      "ui.stop": "Stop",
+      "ui.mean_label": "Empirical mean",
+      "ui.std_label": "Empirical std. dev.",
+
+      "nav.s3": "03 — Einstein's Description",
+      "s3.title": "Einstein's Description",
+      "s3.intro": "We now derive the diffusion equation from first principles, following Einstein's 1905 argument: particles move independently, each taking a small step during a short time interval \u03c4.",
+
+      "nav.s3_1": "3.1 — The step distribution \u03c6(\u03bc)",
+      "s3_1.title": "The step distribution \u03c6(\u03bc)",
+      "s3_1.p1": "Suppose $N$ particles are suspended in the liquid. During each interval $\\tau$, a particle moves a distance $\\Delta x=\\mu$. The number of particles taking a step between $\\mu$ and $\\mu+d\\mu$ is \\[ dN = N\\,\\phi(\\mu)\\,d\\mu. \\]",
+      "s3_1.p2": "$\\phi(\\mu)$ is a probability density, so it must be normalized, $\\int_{-\\infty}^{+\\infty}\\phi(\\mu)\\,d\\mu=1$, and by symmetry it is even, $\\phi(\\mu)=\\phi(-\\mu)$ — no direction is preferred.",
+
+      "nav.s3_2": "3.2 — \u03b7(x,t) and the question",
+      "s3_2.title": "\u03b7(x,t) and the question we want to answer",
+      "s3_2.p1": "Let $\\eta(x,t)$ be the number of particles per unit length around position $x$, at time $t$. Unlike $\\phi$, $\\eta$ is not normalized to $1$ — integrating it over all space gives $N$.",
+      "s3_2.p2": "Knowing $\\eta(x,t)$, what is the concentration after one more step $\\tau$ has elapsed?",
+
+      "nav.s3_3": "3.3 — Building the equation",
+      "s3_3.title": "Building the equation",
+      "s3_3.p1": "A particle arriving at $x$ at time $t+\\tau$ started somewhere at $x+\\mu$ at time $t$, and made exactly the jump needed to land at $x$. Summing this over every possible origin $\\mu$:",
+
+      "nav.s3_4": "3.4 — Two Taylor expansions",
+      "s3_4.title": "Two Taylor expansions",
+      "s3_4.p1": "$\\tau$ is small: expand in time, holding $x$ fixed, to second order: \\[ \\eta(x,t+\\tau)\\approx \\eta(x,t)+\\tau\\frac{\\partial\\eta}{\\partial t}+\\frac{\\tau^2}{2}\\frac{\\partial^2\\eta}{\\partial t^2}. \\]",
+      "s3_4.p2": "$\\mu$ is also small: expand in space, holding $t$ fixed, to the same order: \\[ \\eta(x+\\mu,t)\\approx \\eta(x,t)+\\mu\\frac{\\partial\\eta}{\\partial x}+\\frac{\\mu^2}{2}\\frac{\\partial^2\\eta}{\\partial x^2}. \\]",
+
+      "nav.s3_4b": "3.4 — Substituting into the integral",
+      "s3_4b.title": "Substituting into the integral",
+      "s3_4b.p1": "Plug both expansions into $\\eta(x,t+\\tau)=\\int \\eta(x+\\mu,t)\\,\\phi(\\mu)\\,d\\mu$. Since $\\eta(x,t)$ and its $x$-derivatives don't depend on $\\mu$, they come out of the integral:",
+      "s3_4b.p2": "Three integrals remain on the right — each one multiplying $\\phi(\\mu)$ by a different power of $\\mu$.",
+
+      "nav.s3_4c": "3.4 — Why the middle term vanishes",
+      "s3_4c.title": "Why the middle term vanishes",
+      "s3_4c.p1": "Look at $\\int_{-\\infty}^{+\\infty}\\mu\\,\\phi(\\mu)\\,d\\mu$. Since $\\mu$ is odd and $\\phi(\\mu)$ is even, their product $\\mu\\,\\phi(\\mu)$ is odd — and it's being integrated over the symmetric interval $(-\\infty,+\\infty)$.",
+      "s3_4c.property": "Property: the integral of an odd function over a symmetric interval is zero.",
+      "s3_4c.p2": "So the whole middle term vanishes: $\\int_{-\\infty}^{+\\infty}\\mu\\,\\phi(\\mu)\\,d\\mu=0$. This is exactly where \"no preferred direction\" ($\\phi$ even) does its work.",
+
+      "nav.s3_5": "3.5 — The diffusion equation",
+      "s3_5.title": "Assembling the diffusion equation",
+      "s3_5.p1": "What's left: the first integral is $1$ by normalization, the middle term is gone, and the last integral is what we'll call $D$. That gives the generalized diffusion equation \\[ \\frac{\\tau}{2}\\frac{\\partial^2\\eta}{\\partial t^2}+\\frac{\\partial\\eta}{\\partial t}=D\\,\\frac{\\partial^2\\eta}{\\partial x^2}, \\qquad D=\\frac{1}{\\tau}\\int_{-\\infty}^{+\\infty}\\frac{\\mu^2}{2}\\phi(\\mu)\\,d\\mu. \\]",
+      "s3_5.conclusion": "In the limit \u03c4\u2202\u00b2\u03b7/\u2202t\u00b2 \u226a \u2202\u03b7/\u2202t, this reduces to Einstein's diffusion equation.",
+
+      "nav.s4": "04 — Applications",
+      "s4.title": "Applications of the Diffusion Problem",
+      "s4.intro": "Two very different physical settings, governed by the same diffusion equation, solved with the same tools — only the initial condition changes.",
+
+      "nav.s4_3": "4.3 — The Perfume Case",
+      "s4_3.title": "The Perfume Case",
+      "s4_3.p1": "Consider a long, narrow room — narrow enough to treat as a line, a one-dimensional problem. At the origin, someone opens a bottle of perfume (or drops a bit of ink into a thin tube of water). At $t=0$, all $N$ molecules sit at that single point.",
+      "s4_3.p2": "The question: what is the concentration $\\eta(x,t)$ at every point in the room, at every later instant?",
+
+      "s4_3a.title": "The initial condition",
+      "s4_3a.p1": "All particles at one point, at $t=0$, is precisely a Dirac delta: \\[ \\eta(x,0)=N\\delta(x). \\]",
+      "s4_3a.p2": "Consistent with $\\eta$ integrating to $N$: $\\int_{-\\infty}^{+\\infty}N\\delta(x)\\,dx=N$.",
+
+      "s4_3b.title": "Why Fourier, and not a guess?",
+      "s4_3b.p1": "Most textbooks simply state the Gaussian solution and check that it works, as if it had been guessed. Instead, notice that $e^{ikx}$ is an eigenfunction of $\\partial^2/\\partial x^2$: \\[ \\frac{\\partial^2}{\\partial x^2}e^{ikx}=-k^2 e^{ikx}. \\]",
+      "s4_3b.p2": "Decomposing $\\eta$ into plane waves turns the PDE — which couples every $x$ together — into independent ODEs, one per mode $k$. That's why Fourier is the natural tool here, not a trick.",
+
+      "s4_3b2.title": "A useful analogy: diagonalizing a matrix",
+      "s4_3b2.p1": "Recall solving a linear system of ODEs, $\\dot{\\mathbf{v}} = A\\mathbf{v}$: we diagonalize $A$ using its eigenvectors $\\mathbf{e}_i$ (with $A\\mathbf{e}_i=\\lambda_i\\mathbf{e}_i$), write $\\mathbf{v}=\\sum_i c_i(t)\\,\\mathbf{e}_i$, and the coupled system decouples into $\\dot c_i = \\lambda_i c_i$ — one independent scalar equation per eigenvalue.",
+      "s4_3b2.p2": "Fourier does exactly this for $\\partial^2/\\partial x^2$ acting on functions of $x$: its \"eigenvectors\" are the plane waves $e^{ikx}$, with \"eigenvalues\" $-k^2$. Decomposing $\\eta$ into Fourier modes is diagonalizing an infinite-dimensional operator — same idea, just with the discrete index $i$ replaced by the continuous variable $k$.",
+
+      "s4_3c.title": "A family of ordinary differential equations",
+      "s4_3c.p1": "Writing $\\eta(x,t)$ as a superposition of modes $\\eta_k(t)e^{ikx}$, the diffusion equation becomes, mode by mode: \\[ \\frac{\\partial \\eta_k}{\\partial t} = -Dk^2\\,\\eta_k, \\]",
+      "s4_3c.p2": "with immediate solution $\\eta_k(t)=\\eta_k(0)\\,e^{-Dk^2t}$ — sharp, high-$k$ features decay fastest, exactly what smoothing should look like.",
+
+      "s4_3d.title": "Applying the initial condition",
+      "s4_3d.p1": "$\\eta_k(0)$ comes from transforming $\\eta(x,0)$ itself: \\[ \\eta_k(0) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta(x,0)\\,e^{-ikx}\\,dx. \\]",
+      "s4_3d.p2": "For our delta, $\\eta(x,0)=N\\delta(x)$, so the integral collapses to a single evaluation at $x=0$: \\[ \\eta_k(0) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} N\\delta(x)\\,e^{-ikx}\\,dx = \\frac{N}{\\sqrt{2\\pi}}. \\]",
+      "s4_3d.p3": "Flat in $k$ — a delta is the \"sharpest\" object there is, so it contains every spatial frequency in equal amount.",
+
+      "s4_3e.title": "The full mode solution",
+      "s4_3e.p1": "Combining $\\eta_k(0)=N/\\sqrt{2\\pi}$ with the time-dependence $\\eta_k(t)=\\eta_k(0)e^{-Dk^2t}$ found earlier:",
+      "s4_3e.p2": "Every mode is now known, at every time. What remains is purely mechanical: undo the transform to get back to $\\eta(x,t)$.",
+
+      "s4_3f.title": "Back to real space",
+      "s4_3f.p1": "By definition, $\\eta(x,t)$ is recovered from its modes by the inverse transform: \\[ \\eta(x,t) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta_k(t)\\,e^{ikx}\\,dk. \\]",
+      "s4_3f.p2": "Substituting $\\eta_k(t)$ from the previous slide: \\[ \\eta(x,t) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\frac{N}{\\sqrt{2\\pi}}\\,e^{-Dk^2t}\\,e^{ikx}\\,dk = \\frac{N}{2\\pi}\\int_{-\\infty}^{+\\infty} e^{-Dtk^2+ixk}\\,dk. \\]",
+      "s4_3f.p3": "One integral left to compute — and it's a standard one.",
+
+      "s4_3g.title": "Evaluating the Gaussian integral",
+      "s4_3g.p1": "The integral has the standard form $\\int_{-\\infty}^{+\\infty}e^{-ak^2+ibk}\\,dk=\\sqrt{\\pi/a}\\;e^{-b^2/4a}$, with $a=Dt$ and $b=x$:",
+      "s4_3g.p2": "This is the closed-form answer — no more transforms, no more integrals left to do.",
+
+      "s4_3h.title": "A delta becomes a Gaussian",
+      "s4_3h.p1": "A delta at $t=0$ evolves into a Gaussian that widens as $t$ grows — exactly the shape we'll watch form in the simulation.",
+
+      "nav.s4_4": "4.4 — The Rio Tiet\u00ea Case",
+      "s4_4.title": "The Rio Tiet\u00ea Case",
+      "s4_4.p1": "Now imagine a river, also treated as one-dimensional. A pollutant is dumped uniformly along the entire left bank, giving a step initial condition:",
+
+      "s4_4pde.title": "The diffusion equation, once more",
+      "s4_4pde.p1": "Whatever the initial condition, the concentration still obeys the same equation we derived earlier from Einstein's argument:",
+      "s4_4pde.p2": "The only thing that changes from problem to problem is $\\eta(x,0)$. Is there a way to solve for any initial condition, once and for all?",
+
+      "s4_4hook.title": "Since the equation is linear...",
+      "s4_4hook.p1": "The diffusion equation is linear: if $\\eta_1$ and $\\eta_2$ are both solutions, so is any combination $a\\eta_1+b\\eta_2$. That suggests we could build the step's solution out of solutions we already know, superposed together.",
+      "s4_4hook.p2": "This idea — solve a linear equation once for a point source, then superpose — has a name: the Green's function. But what exactly is a Green's function?",
+
+      "nav.s4_gf": "4.4 — What is a Green's function?",
+      "s4_gf1.title": "What is a Green's function?",
+      "s4_gf1.p1": "Given a linear differential operator $L$ acting on functions over a domain $\\Omega$, the Green's function $G=G(y,s)$ at the point $s\\in\\Omega$ is any solution of \\[ L\\,G(y,s) = \\delta(y-s). \\]",
+      "s4_gf1.p2": "In words: $G(y,s)$ is the system's response, measured at $y$, to a unit point impulse placed at $s$.",
+
+      "s4_gf1b.title": "Why bother? Superposition",
+      "s4_gf1b.p1": "Multiply both sides by an arbitrary function $f(s)$ and integrate over $s$: \\[ \\int L\\,G(y,s)\\,f(s)\\,ds = \\int \\delta(y-s)\\,f(s)\\,ds = f(y). \\]",
+      "s4_gf1b.p2": "Since $L$ acts on $y$, not $s$, it can be pulled outside the integral on the left: $L\\left[\\int G(y,s)\\,f(s)\\,ds\\right] = f(y)$. So for the equation $Lu(y)=f(y)$, the solution is \\[ u(y) = \\int G(y,s)\\,f(s)\\,ds. \\]",
+      "s4_gf1b.p3": "Solve once, for a point impulse — and you've solved it for every source $f$, for free.",
+
+      "nav.s4_gf1c": "4.4 — No source, just an initial profile",
+      "s4_gf1c.title": "The homogeneous case, with initial data",
+      "s4_gf1c.p1": "Now suppose there's no source at all ($f=0$), just a homogeneous equation $Lu=0$ with a nonzero initial profile $u(x,0)=u_0(x)$. Writing $y=(x,t)$ and $s=(\\xi,\\tau)$ for space-time points, our operator is \\[ L = \\partial_t - D\\,\\partial_x^2. \\]",
+      "s4_gf1c.p2": "To handle this case we need the adjoint operator $L^*$, defined so that $\\int\\!\\!\\int\\big[v\\,Lu - u\\,L^*v\\big]\\,d\\xi\\,d\\tau$ equals only boundary terms. Integrating by parts once in $\\tau$ (flipping a sign) and twice in $\\xi$ (no sign flip) gives \\[ L^*v = -\\partial_\\tau v - D\\,\\partial_\\xi^2 v. \\]",
+
+      "nav.s4_gf1d": "4.4 — Opening the boundary terms",
+      "s4_gf1d.title": "Opening the boundary terms",
+      "s4_gf1d.p1": "Define $G(y,s)$ by $L^*_sG(y,s)=\\delta(y-s)$, and plug $v=G(y,s)$, $u=\\eta(s)$ into the identity, integrating $\\xi$ over the line and $\\tau$ from $0$ to $t$. Since $L\\eta=0$ and $L^*_sG=\\delta(y-s)$, the left side collapses to $-\\eta(x,t)$.",
+      "s4_gf1d.p2": "The right side splits into two pieces: a temporal boundary term at $\\tau=0$ and $\\tau=t$ (from integrating by parts in $\\tau$), and a spatial term at $\\xi\\to\\pm\\infty$ (from the double integration by parts in $\\xi$). The spatial term vanishes — both $\\eta$ and $G$ decay at infinity — leaving \\[ -\\eta(x,t) = \\int_{-\\infty}^{+\\infty}\\!\\Big[G(y,(\\xi,t))\\,\\eta(\\xi,t) - G(y,(\\xi,0))\\,\\eta(\\xi,0)\\Big]\\,d\\xi. \\]",
+
+      "nav.s4_gf1e": "4.4 — Causality: only t=0 survives",
+      "s4_gf1e.title": "Causality: only t=0 survives",
+      "s4_gf1e.p1": "The $\\tau=t$ term vanishes by definition of the retarded Green's function: effects can't precede causes, so $G(y,(\\xi,t))\\equiv0$ at the observation instant itself — consistent with the Gaussian only \"switching on\" in the limit $\\tau\\to t^-$.",
+      "s4_gf1e.p2": "What's left is exactly the propagation formula we wanted: \\[ \\eta(x,t) = \\int_{-\\infty}^{+\\infty} G(y,(\\xi,0))\\,u_0(\\xi)\\,d\\xi. \\]",
+
+      "s4_gf2.title": "The Green's function of our diffusion equation",
+      "s4_gf2.p1": "We already solved for the response to a unit point source at the origin — that's exactly the perfume problem with $N=1$: \\[ G(x,t;0,0) = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-x^2/4Dt}. \\]",
+      "s4_gf2.p2": "Since $D$ is constant, the problem is invariant under translations in space and time: $G(x,t;\\xi,\\tau)=G(x-\\xi,\\,t-\\tau)$. Setting $\\tau=0$ gives exactly the propagator we need: \\[ G(x-x',t) = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-(x-x')^2/4Dt}. \\]",
+
+      "s4_super.title": "Solving the Rio Tiet\u00ea by superposition",
+      "s4_super.p1": "Any initial condition is a sum of point sources, each weighted by how much concentration was actually there: \\[ \\eta(x,t)=\\int_{-\\infty}^{+\\infty}\\eta(x',0)\\,G(x-x',t)\\,dx'. \\]",
+      "s4_super.p2": "For the step, only $x'<0$ contributes, where $\\eta(x',0)=C$: \\[ \\eta(x,t) = C\\int_{-\\infty}^{0} G(x-x',t)\\,dx'. \\]",
+
+      "s4_4a.title": "Solving for the step",
+      "s4_4a.p1": "Only $x'<0$ contributes. Substituting $w=(x-x')/\\sqrt{4Dt}$ turns the integral into the complementary error function: \\[ \\eta(x,t) = \\frac{C}{2}\\,\\mathrm{erfc}\\!\\left(\\frac{x}{\\sqrt{4Dt}}\\right) = \\frac{C}{2}\\left[1-\\mathrm{erf}\\!\\left(\\frac{x}{\\sqrt{4Dt}}\\right)\\right]. \\]",
+
+      "s4_4b.title": "Does it make sense?",
+      "s4_4b.p1": "$t\\to 0$: $\\mathrm{erf}(\\mp\\infty)=\\mp1$, recovering the sharp step ($C$ for $x<0$, $0$ for $x>0$). $t\\to\\infty$: $\\mathrm{erf}(0)=0$, so $\\eta\\to C/2$ everywhere — full mixing.",
+      "s4_4b.p2": "Same diffusion equation, same Green's function, a very different-looking result: a step smooths into an S-curve instead of a peak spreading outward.",
+
+      "nav.s4_exp": "4.5 — The Exponential Case",
+      "s4_exp.title": "A Third Case: Exponential Decay",
+      "s4_exp.p1": "A quick conceptual note first. Linearity means $a\\eta_1+b\\eta_2$ is a solution whenever $\\eta_1,\\eta_2$ are — but that does not mean every new solution is a finite combination of just the Gaussian and the erfc we've found so far. What actually guarantees it is stronger: any $\\eta_0(x)$ is a continuous superposition of deltas, so by linearity its solution is the same superposition of $G(x-x',t)$'s. $G$ is the building block — the Gaussian and the erfc are themselves already superpositions of it.",
+      "s4_exp.p2": "Consider a pollutant dumped only on the bank $x>0$, already decaying exponentially with distance: \\[ \\eta(x,0)=\\eta_0(x) = \\begin{cases} e^{-x}, & x>0 \\\\ 0, & x<0. \\end{cases} \\]",
+
+      "s4_exp2.title": "Setting up the convolution",
+      "s4_exp2.p1": "Same recipe as always — plug $\\eta_0$ into the propagation formula, integrating only over $x'>0$ where $\\eta_0(x')=e^{-x'}$: \\[ \\eta(x,t) = \\int_0^{+\\infty} e^{-x'}\\,\\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-(x-x')^2/4Dt}\\,dx'. \\]",
+      "s4_exp2.p2": "The trick, as always with these Gaussian integrals: combine both exponents and complete the square in $x'$.",
+
+      "s4_exp3.title": "Completing the square",
+      "s4_exp3.p1": "Combining the two exponents and completing the square in $x'$: \\[ -x' - \\frac{(x-x')^2}{4Dt} = (Dt-x) \\;-\\; \\frac{\\big[x'-(x-2Dt)\\big]^2}{4Dt}. \\]",
+      "s4_exp3.p2": "The part that only depends on $x$ and $t$ pulls out of the integral; what's left inside is a plain Gaussian centered at $x-2Dt$.",
+
+      "s4_exp4.title": "The result",
+      "s4_exp4.p1": "Substituting $w=[x'-(x-2Dt)]/\\sqrt{4Dt}$ turns the remaining integral into an $\\mathrm{erfc}$, exactly as in the Rio Tietê case: \\[ \\eta(x,t) = \\frac{1}{2}\\,e^{\\,Dt-x}\\;\\mathrm{erfc}\\!\\left(\\frac{2Dt-x}{2\\sqrt{Dt}}\\right). \\]",
+
+      "s4_exp5.title": "Does it recover the initial condition?",
+      "s4_exp5.p1": "As $t\\to0^+$: for $x>0$ the erfc argument goes to $-\\infty$, so $\\mathrm{erfc}\\to2$ and $\\eta\\to e^{-x}$; for $x<0$ it goes to $+\\infty$, so $\\mathrm{erfc}\\to0$ and $\\eta\\to0$. Both limits match $\\eta_0(x)$ exactly.",
+      "s4_exp5.p2": "Notice the pattern across all three cases: the same $G(x-x',t)$ sits inside every integral — only the support and weight $\\eta_0(x')$ change. That universality of $G$, not a coincidence of final forms, is what makes the Green's-function approach worth the setup.",
+
+      "nav.s4_av": "4.6 — Estimating Avogadro's Number",
+      "s4_av.title": "Estimating Avogadro's Number",
+      "s4_av.p1": "One of the most interesting applications of Einstein's approach is estimating Avogadro's number directly from the statistics of Brownian motion.",
+      "s4_av.p2": "Dividing $\\eta(x,t)$ by the total number of particles $N$ gives the probability of finding a particle between $x$ and $x+dx$, given that it started at the origin: \\[ P(x,t) = \\frac{\\eta(x,t)}{N} = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-x^2/4Dt}. \\]",
+      "s4_av.p3": "A Gaussian with mean $\\langle x\\rangle=0$ and variance $\\sigma^2=2Dt$.",
+
+      "s4_av1.title": "Mean squared displacement",
+      "s4_av1.p1": "Computing the mean squared displacement directly from $P(x,t)$: \\[ \\langle x^2\\rangle = \\frac{2}{\\sqrt{4\\pi Dt}}\\int_0^{\\infty} x^2\\,e^{-x^2/4Dt}\\,dx = 2Dt. \\]",
+      "s4_av1.p2": "Known as Einstein's relation — the average squared distance a particle wanders grows linearly with time, not with time squared as ballistic motion would predict.",
+
+      "s4_av2.title": "From D to Avogadro's number",
+      "s4_av2.p1": "For spherical particles of radius $a$, Stokes' law gives the diffusion coefficient: \\[ D = \\frac{k_B T}{6\\pi\\gamma a}. \\]",
+      "s4_av2.p2": "Substituting into the mean squared displacement: \\[ \\langle x^2\\rangle = \\frac{RT}{3\\pi N_a\\,\\gamma a}\\,t \\;\\propto\\; t. \\]",
+      "s4_av2.p3": "Since $\\langle x^2\\rangle$, $t$, $\\gamma$, and $a$ are all directly measurable — with a stopwatch and a microscope, as Perrin did — this expression lets us solve for $N_a$: a statistical argument about random walks turned into one of the first direct measurements of Avogadro's number.",
+
+      "nav.s4_5": "4.7 — Simulation",
+      "s4_5.title": "Watching diffusion happen",
+      "s4_5.intro": "A 1D random walk: every particle steps \u00b1s at each tick. Toggle between the point source, the step, and the exponential decay, and watch the histogram converge to the curve derived above.",
+
+      "ui.ic_label": "Initial condition",
+      "ui.ic_delta": "Point source (perfume)",
+      "ui.ic_step": "Uniform half (Rio Tiet\u00ea)",
+      "ui.ic_exponential": "Exponential decay (Rio Tiet\u00ea)",
+      "ui.play": "Play",
+      "ui.pause": "Pause",
+      "ui.reset": "Reset",
+      "ui.t_label": "Elapsed steps (t)",
+
+      "common.placeholder": "Content coming soon."
+    },
+
+    pt: {
+      "title.eyebrow": "Notas de aula",
+      "title.main": "Introdução à Difusão",
+      "title.sub": "Do Teorema do Limite Central à equação de difusão, passando pela dedução cinética de Einstein e exemplos físicos.",
+
+      "nav.s1": "01 — Introdução",
+      "s1.title": "Introdução",
+      "s1.p1": "Em 1828, Robert Brown documentou que partículas em suspensão se moviam de forma irregular — efeito mais tarde chamado de movimento browniano. Só foi explicado no artigo de Einstein de 1905.",
+      "s1.p2": "Tomando como base a mecânica estatística, Einstein mostrou que o movimento podia ser tratado de forma probabilística: é possível calcular a probabilidade de uma partícula se mover uma certa distância em um certo intervalo de tempo.",
+
+      "nav.s1_1": "1.1 — A intuição por trás da difusão",
+      "s1_1.title": "A intuição por trás da difusão",
+      "s1_1.p1": "Durante o movimento browniano, as partículas tendem a se espalhar até ficarem cada vez mais uniformemente distribuídas no meio. Se uma região I possui, num dado momento, duas vezes mais partículas que uma região II, o número esperado de partículas migrando de I para II será duas vezes maior que o inverso — não porque uma partícula individual se comporte de forma diferente, mas simplesmente porque há o dobro delas fazendo a mesma tentativa aleatória.",
+      "s1_1.p2": "Essa é a essência da difusão, intrinsecamente ligada ao movimento browniano — a ideia que vamos transformar numa equação ao longo das próximas seções.",
+
+      "nav.s1_sim": "1.2 — Simulação",
+      "s1_sim.title": "Duas câmaras, um tubo",
+      "s1_sim.intro": "Duas câmaras, A e B, conectadas por um tubo estreito. As partículas começam como um aglomerado no centro de cada câmara. Abra o tubo e veja o argumento do fluxo acontecer.",
+
+      "ui.na_label": "Partículas em A:",
+      "ui.nb_label": "Partículas em B:",
+      "ui.open_tube": "Abrir tubo",
+      "ui.close_tube": "Fechar tubo",
+      "ui.count_a": "Atualmente em A",
+      "ui.count_b": "Atualmente em B",
+      "ui.legend_a": "Começou em A",
+      "ui.legend_b": "Começou em B",
+
+      "nav.s1_2": "1.3 — Por que uma gaussiana, e o que vem a seguir",
+      "s1_2.title": "Por que uma gaussiana, e o que vem a seguir",
+      "s1_2.p1": "Um dos resultados de Einstein é que a densidade de probabilidade do deslocamento de uma partícula tem a forma de uma curva gaussiana — uma consequência direta do Teorema do Limite Central: a posição final da partícula é a soma de muitos \"empurrões\" aleatórios, independentes e identicamente distribuídos, vindos das moléculas ao redor.",
+      "s1_2.p2": "Estas notas seguem essa lógica: primeiro a estatística por trás da gaussiana, depois a dedução de Einstein para a própria equação de difusão, e por fim algumas aplicações físicas — trabalhadas com simulações ao vivo.",
+
+      "nav.s2": "02 — Por que uma Gaussiana?",
+      "s2.title": "Por que uma Gaussiana?",
+      "s2.sub": "Antes de escrever a equação de difusão, vamos entender por que a Gaussiana aparece em todo lugar — começando pela Moment Generating Function.",
+
+      "nav.s2_1": "2.1 — Moment Generating Function",
+      "s2_1.title": "O que é uma Moment Generating Function?",
+      "s2_1.p1": "A Moment Generating Function (MGF) é uma função que retorna o valor esperado de \\(e^{tX}\\). Para uma variável aleatória discreta, a MGF é uma soma: \\[ M_X(t) = \\sum e^{tX}\\,P(X=x). \\]",
+      "s2_1.p2": "Para conseguirmos o n-ésimo momento (\\(E[X^n]\\)) tomamos a n-ésima derivada da MGF com respeito a \\(t\\), em \\(t=0\\): \\[ E[X^n] = M_X^{(n)}(0). \\]",
+
+      "nav.s2_2": "2.2 — Demonstração",
+      "s2_2.title": "Demonstração",
+      "s2_2.intro": "Vamos mostrar que a soma padronizada de variáveis i.i.d. converge para uma Gaussiana quando \\(n\\to\\infty\\).",
+
+      "s2_2a.p1": "Considere um conjunto de dados \\(X_i\\), \\(i=1,\\dots,n\\), identicamente distribuídos e independentes. Por simplicidade, vamos assumir que a média é nula e que a variância \\(\\sigma^2\\) é igual a \\(1\\). A soma dos dados pode ser escrita como \\[ S_n = \\sum_{i=1}^{n} X_i. \\] Como o conjunto de dados vem da mesma distribuição, sua MGF \\(m(t)\\) é a mesma.",
+      "s2_2a.property": "Propriedade: a MGF da soma é o produto das MGFs.",
+      "s2_2a.p2": "Desse modo, a MGF de \\(S_n\\) é \\([m(t)]^n\\).",
+
+      "s2_2b.p1": "Vamos agora tomar a expansão em Taylor de \\(m(t)\\): \\[ m(t) = m(0) + t\\,m'(0) + \\frac{t^2}{2}m''(0) + O(t^3). \\]",
+      "s2_2b.p2": "Como \\(m(0) = 1\\), a primeira derivada da MGF é a média, neste caso zero, e a segunda derivada é a variância, neste caso \\(1\\), temos: \\[ m(t) = 1 + \\frac{t^2\\sigma^2}{2} + O(t^3). \\]",
+
+      "s2_2c.property": "Propriedade: se \\(Y = bX\\) então \\(m_Y(t) = m_X(bt)\\).",
+      "s2_2c.p1": "Utilizando esta propriedade, definimos \\(Z = S_n/(\\sigma\\sqrt{n})\\) de forma que: \\[ m_Z(t) = m_S\\!\\left(\\frac{t}{\\sigma\\sqrt{n}}\\right) = \\left[m\\!\\left(\\frac{t}{\\sigma\\sqrt{n}}\\right)\\right]^n. \\]",
+
+      "s2_2d.p1": "Expandindo \\(m(t/\\sigma\\sqrt{n})\\): \\[ m\\!\\left(\\frac{t}{\\sigma\\sqrt{n}}\\right) = 1+\\frac{1}{2}\\frac{\\sigma^2 t^2}{\\sigma^2 n} + O\\!\\left(\\frac{t^3}{\\sigma^3 n^{3/2}}\\right) = 1+\\frac{t^2}{2n}. \\]",
+      "s2_2d.p2": "Note que nos termos de ordem mais alta a potência de \\(n\\) fica cada vez maior. Isso faz com que a contribuição morra conforme \\(n\\) tende ao infinito.",
+
+      "s2_2e.p1": "Vamos agora tomar o limite para \\(n\\to\\infty\\) de \\(m_Z(t)\\): \\[ \\lim_{n\\to\\infty} m_Z(t) = \\lim_{n\\to\\infty}\\left[1+\\frac{t^2}{2n}+\\epsilon^3\\right]^n = \\lim_{n\\to\\infty}\\left(1+\\frac{t^2}{2n}\\right)^n. \\]",
+
+      "s2_2f.p1": "Da definição de exponencial, \\(\\lim_{n\\to\\infty}\\left(1+\\alpha/n\\right)^n = e^{\\alpha}\\), logo: \\[ \\lim_{n\\to\\infty}\\left(1+\\frac{t^2}{2n}\\right)^n = e^{t^2/2}, \\] que é a MGF da distribuição normal \\(N(0,1)\\).",
+      "s2_2f.conclusion": "Este é o chamado Teorema do Limite Central.",
+
+      "nav.s2_3": "2.3 — Exemplo",
+      "s2_3.title": "Exemplo",
+      "s2_3.intro": "Escolha uma distribuição inicial e veja a soma padronizada convergir para uma Gaussiana conforme N cresce.",
+
+      "ui.distribution": "Distribuição inicial",
+      "ui.dist_uniform": "Uniforme [0,1]",
+      "ui.dist_exponential": "Exponencial (λ=1)",
+      "ui.dist_bernoulli": "Bernoulli (moeda)",
+      "ui.dist_dice": "Discreta (dado, 1–6)",
+      "ui.n_label": "Número de termos",
+      "ui.resample": "Reamostrar",
+      "ui.animate": "Animar",
+      "ui.stop": "Parar",
+      "ui.mean_label": "Média empírica",
+      "ui.std_label": "Desvio padrão empírico",
+
+      "nav.s3": "03 — A Descrição de Einstein",
+      "s3.title": "A Descrição de Einstein",
+      "s3.intro": "Vamos agora deduzir a equação de difusão a partir de primeiros princípios, seguindo o argumento de Einstein de 1905: as partículas se movem de forma independente, cada uma dando um pequeno passo durante um curto intervalo de tempo τ.",
+
+      "nav.s3_1": "3.1 — A distribuição de passos φ(μ)",
+      "s3_1.title": "A distribuição de passos φ(μ)",
+      "s3_1.p1": "Suponha que existam $N$ partículas em suspensão no líquido. Durante cada intervalo $\\tau$, uma partícula se desloca uma distância $\\Delta x=\\mu$. O número de partículas que dá um passo entre $\\mu$ e $\\mu+d\\mu$ é \\[ dN = N\\,\\phi(\\mu)\\,d\\mu. \\]",
+      "s3_1.p2": "$\\phi(\\mu)$ é uma densidade de probabilidade, então deve ser normalizada, $\\int_{-\\infty}^{+\\infty}\\phi(\\mu)\\,d\\mu=1$, e por simetria é par, $\\phi(\\mu)=\\phi(-\\mu)$ — não há direção preferencial.",
+
+      "nav.s3_2": "3.2 — η(x,t) e a pergunta",
+      "s3_2.title": "η(x,t) e a pergunta que queremos responder",
+      "s3_2.p1": "Seja $\\eta(x,t)$ o número de partículas por unidade de comprimento em torno da posição $x$, no instante $t$. Diferente de $\\phi$, $\\eta$ não é normalizada a $1$ — integrando-a em todo o espaço obtemos $N$.",
+      "s3_2.p2": "Conhecendo $\\eta(x,t)$, qual a concentração depois de decorrido mais um passo $\\tau$?",
+
+      "nav.s3_3": "3.3 — Construindo a equação",
+      "s3_3.title": "Construindo a equação",
+      "s3_3.p1": "Uma partícula que chega em $x$ no instante $t+\\tau$ partiu de alguma posição $x+\\mu$ no instante $t$, e deu exatamente o salto necessário para chegar em $x$. Somando sobre toda origem $\\mu$ possível:",
+
+      "nav.s3_4": "3.4 — Duas expansões de Taylor",
+      "s3_4.title": "Duas expansões de Taylor",
+      "s3_4.p1": "$\\tau$ é pequeno: expandimos no tempo, com $x$ fixo, até segunda ordem: \\[ \\eta(x,t+\\tau)\\approx \\eta(x,t)+\\tau\\frac{\\partial\\eta}{\\partial t}+\\frac{\\tau^2}{2}\\frac{\\partial^2\\eta}{\\partial t^2}. \\]",
+      "s3_4.p2": "$\\mu$ também é pequeno: expandimos no espaço, com $t$ fixo, na mesma ordem: \\[ \\eta(x+\\mu,t)\\approx \\eta(x,t)+\\mu\\frac{\\partial\\eta}{\\partial x}+\\frac{\\mu^2}{2}\\frac{\\partial^2\\eta}{\\partial x^2}. \\]",
+
+      "nav.s3_4b": "3.4 — Substituindo na integral",
+      "s3_4b.title": "Substituindo na integral",
+      "s3_4b.p1": "Substitua as duas expansões em $\\eta(x,t+\\tau)=\\int \\eta(x+\\mu,t)\\,\\phi(\\mu)\\,d\\mu$. Como $\\eta(x,t)$ e suas derivadas em $x$ não dependem de $\\mu$, elas saem da integral:",
+      "s3_4b.p2": "Sobram três integrais do lado direito — cada uma multiplicando $\\phi(\\mu)$ por uma potência diferente de $\\mu$.",
+
+      "nav.s3_4c": "3.4 — Por que o termo do meio se anula",
+      "s3_4c.title": "Por que o termo do meio se anula",
+      "s3_4c.p1": "Olhe para $\\int_{-\\infty}^{+\\infty}\\mu\\,\\phi(\\mu)\\,d\\mu$. Como $\\mu$ é ímpar e $\\phi(\\mu)$ é par, o produto $\\mu\\,\\phi(\\mu)$ é ímpar — e está sendo integrado no intervalo simétrico $(-\\infty,+\\infty)$.",
+      "s3_4c.property": "Propriedade: a integral de uma função ímpar num intervalo simétrico é zero.",
+      "s3_4c.p2": "Logo, o termo do meio inteiro se anula: $\\int_{-\\infty}^{+\\infty}\\mu\\,\\phi(\\mu)\\,d\\mu=0$. É exatamente aqui que a hipótese de \"sem direção preferencial\" ($\\phi$ par) entra em ação.",
+
+      "nav.s3_5": "3.5 — A equação de difusão",
+      "s3_5.title": "Montando a equação de difusão",
+      "s3_5.p1": "O que sobra: a primeira integral vale $1$ pela normalização, o termo do meio sumiu, e a última integral é o que vamos chamar de $D$. Isso dá a equação de difusão generalizada \\[ \\frac{\\tau}{2}\\frac{\\partial^2\\eta}{\\partial t^2}+\\frac{\\partial\\eta}{\\partial t}=D\\,\\frac{\\partial^2\\eta}{\\partial x^2}, \\qquad D=\\frac{1}{\\tau}\\int_{-\\infty}^{+\\infty}\\frac{\\mu^2}{2}\\phi(\\mu)\\,d\\mu. \\]",
+      "s3_5.conclusion": "No limite τ∂²η/∂t² ≪ ∂η/∂t, isso se reduz à equação de difusão de Einstein.",
+
+      "nav.s4": "04 — Aplicações",
+      "s4.title": "Aplicações do Problema da Difusão",
+      "s4.intro": "Dois cenários físicos bem diferentes, governados pela mesma equação de difusão, resolvidos com as mesmas ferramentas — só a condição inicial muda.",
+
+      "nav.s4_3": "4.3 — O Caso do Perfume",
+      "s4_3.title": "O Caso do Perfume",
+      "s4_3.p1": "Imagine uma sala comprida e estreita — tão estreita que podemos tratá-la como uma reta, um problema em uma dimensão. Na origem, alguém abre um vidro de perfume (ou pinga um pouco de tinta em um tubo estreito cheio d'água). Em $t=0$, todas as $N$ moléculas estão naquele único ponto.",
+      "s4_3.p2": "A pergunta: qual a concentração $\\eta(x,t)$ em cada ponto da sala, em cada instante posterior?",
+
+      "s4_3a.title": "A condição inicial",
+      "s4_3a.p1": "Todas as partículas em um ponto, em $t=0$, é precisamente uma delta de Dirac: \\[ \\eta(x,0)=N\\delta(x). \\]",
+      "s4_3a.p2": "Consistente com $\\eta$ integrando para $N$: $\\int_{-\\infty}^{+\\infty}N\\delta(x)\\,dx=N$.",
+
+      "s4_3b.title": "Por que Fourier, e não um chute?",
+      "s4_3b.p1": "A maioria dos livros-texto simplesmente apresenta a solução gaussiana e verifica que ela funciona, como se tivesse sido adivinhada. Em vez disso, note que $e^{ikx}$ é autofunção de $\\partial^2/\\partial x^2$: \\[ \\frac{\\partial^2}{\\partial x^2}e^{ikx}=-k^2 e^{ikx}. \\]",
+      "s4_3b.p2": "Decompor $\\eta$ em ondas planas transforma a EDP — que acopla todo $x$ — em EDOs independentes, uma por modo $k$. É por isso que Fourier é a ferramenta natural aqui, não um truque.",
+
+      "s4_3b2.title": "Uma analogia útil: diagonalizar uma matriz",
+      "s4_3b2.p1": "Lembre de resolver um sistema linear de EDOs, $\\dot{\\mathbf{v}} = A\\mathbf{v}$: diagonalizamos $A$ usando seus autovetores $\\mathbf{e}_i$ (com $A\\mathbf{e}_i=\\lambda_i\\mathbf{e}_i$), escrevemos $\\mathbf{v}=\\sum_i c_i(t)\\,\\mathbf{e}_i$, e o sistema acoplado se desacopla em $\\dot c_i = \\lambda_i c_i$ — uma equação escalar independente por autovalor.",
+      "s4_3b2.p2": "Fourier faz exatamente isso para $\\partial^2/\\partial x^2$ agindo sobre funções de $x$: seus \"autovetores\" são as ondas planas $e^{ikx}$, com \"autovalores\" $-k^2$. Decompor $\\eta$ em modos de Fourier é diagonalizar um operador de dimensão infinita — a mesma ideia, só trocando o índice discreto $i$ pela variável contínua $k$.",
+
+      "s4_3c.title": "Uma família de equações diferenciais ordinárias",
+      "s4_3c.p1": "Escrevendo $\\eta(x,t)$ como superposição de modos $\\eta_k(t)e^{ikx}$, a equação de difusão vira, modo a modo: \\[ \\frac{\\partial \\eta_k}{\\partial t} = -Dk^2\\,\\eta_k, \\]",
+      "s4_3c.p2": "com solução imediata $\\eta_k(t)=\\eta_k(0)\\,e^{-Dk^2t}$ — feições afiadas, de $k$ alto, decaem mais rápido, exatamente como uma suavização deveria se comportar.",
+
+      "s4_3d.title": "Aplicando a condição inicial",
+      "s4_3d.p1": "$\\eta_k(0)$ vem de transformar o próprio $\\eta(x,0)$: \\[ \\eta_k(0) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta(x,0)\\,e^{-ikx}\\,dx. \\]",
+      "s4_3d.p2": "Para nossa delta, $\\eta(x,0)=N\\delta(x)$, então a integral colapsa numa única avaliação em $x=0$: \\[ \\eta_k(0) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} N\\delta(x)\\,e^{-ikx}\\,dx = \\frac{N}{\\sqrt{2\\pi}}. \\]",
+      "s4_3d.p3": "Constante em $k$ — uma delta é o objeto \"mais afiado\" que existe, então contém todas as frequências espaciais em igual intensidade.",
+
+      "s4_3e.title": "A solução completa dos modos",
+      "s4_3e.p1": "Combinando $\\eta_k(0)=N/\\sqrt{2\\pi}$ com a dependência temporal $\\eta_k(t)=\\eta_k(0)e^{-Dk^2t}$ encontrada antes:",
+      "s4_3e.p2": "Todo modo agora é conhecido, em todo instante. O que resta é puramente mecânico: desfazer a transformada para voltar a $\\eta(x,t)$.",
+
+      "s4_3f.title": "Voltando ao espaço real",
+      "s4_3f.p1": "Por definição, $\\eta(x,t)$ é recuperada a partir de seus modos pela transformada inversa: \\[ \\eta(x,t) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta_k(t)\\,e^{ikx}\\,dk. \\]",
+      "s4_3f.p2": "Substituindo $\\eta_k(t)$ do slide anterior: \\[ \\eta(x,t) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\frac{N}{\\sqrt{2\\pi}}\\,e^{-Dk^2t}\\,e^{ikx}\\,dk = \\frac{N}{2\\pi}\\int_{-\\infty}^{+\\infty} e^{-Dtk^2+ixk}\\,dk. \\]",
+      "s4_3f.p3": "Falta calcular só uma integral — e ela é padrão.",
+
+      "s4_3g.title": "Calculando a integral gaussiana",
+      "s4_3g.p1": "A integral tem a forma padrão $\\int_{-\\infty}^{+\\infty}e^{-ak^2+ibk}\\,dk=\\sqrt{\\pi/a}\\;e^{-b^2/4a}$, com $a=Dt$ e $b=x$:",
+      "s4_3g.p2": "Esta é a resposta em forma fechada — sem mais transformadas, sem mais integrais a fazer.",
+
+      "s4_3h.title": "Uma delta vira uma gaussiana",
+      "s4_3h.p1": "Uma delta em $t=0$ evolui para uma gaussiana que se alarga conforme $t$ cresce — exatamente a forma que veremos surgir na simulação.",
+
+      "nav.s4_4": "4.4 — O Caso do Rio Tietê",
+      "s4_4.title": "O Caso do Rio Tietê",
+      "s4_4.p1": "Imagine agora um rio, também tratado como unidimensional. Um poluente é despejado uniformemente ao longo de toda a margem esquerda, gerando uma condição inicial em degrau:",
+
+      "s4_4pde.title": "A equação de difusão, mais uma vez",
+      "s4_4pde.p1": "Seja qual for a condição inicial, a concentração continua obedecendo a mesma equação que deduzimos a partir do argumento de Einstein:",
+      "s4_4pde.p2": "A única coisa que muda de problema para problema é $\\eta(x,0)$. Existe uma forma de resolver para qualquer condição inicial, de uma vez por todas?",
+
+      "s4_4hook.title": "Como a equação é linear...",
+      "s4_4hook.p1": "A equação de difusão é linear: se $\\eta_1$ e $\\eta_2$ são soluções, qualquer combinação $a\\eta_1+b\\eta_2$ também é. Isso sugere que podemos construir a solução do degrau a partir de soluções que já conhecemos, superpostas.",
+      "s4_4hook.p2": "Essa ideia — resolver uma equação linear uma vez para uma fonte pontual, e depois superpor — tem nome: a função de Green. Mas o que exatamente é uma função de Green?",
+
+      "nav.s4_gf": "4.4 — O que é uma função de Green?",
+      "s4_gf1.title": "O que é uma função de Green?",
+      "s4_gf1.p1": "Dado um operador diferencial linear $L$ agindo sobre funções em um domínio $\\Omega$, a função de Green $G=G(y,s)$ no ponto $s\\in\\Omega$ é qualquer solução de \\[ L\\,G(y,s) = \\delta(y-s). \\]",
+      "s4_gf1.p2": "Em palavras: $G(y,s)$ é a resposta do sistema, medida em $y$, a um impulso pontual unitário colocado em $s$.",
+
+      "s4_gf1b.title": "Por que se importar? Superposição",
+      "s4_gf1b.p1": "Multiplique os dois lados por uma função arbitrária $f(s)$ e integre em $s$: \\[ \\int L\\,G(y,s)\\,f(s)\\,ds = \\int \\delta(y-s)\\,f(s)\\,ds = f(y). \\]",
+      "s4_gf1b.p2": "Como $L$ age sobre $y$, não sobre $s$, ele pode sair da integral do lado esquerdo: $L\\left[\\int G(y,s)\\,f(s)\\,ds\\right] = f(y)$. Então, para a equação $Lu(y)=f(y)$, a solução é \\[ u(y) = \\int G(y,s)\\,f(s)\\,ds. \\]",
+      "s4_gf1b.p3": "Resolva uma vez, para um impulso pontual — e você resolveu para qualquer fonte $f$, de graça.",
+
+      "nav.s4_gf1c": "4.4 — Sem fonte, só um perfil inicial",
+      "s4_gf1c.title": "O caso homogêneo, com condição inicial",
+      "s4_gf1c.p1": "Suponha agora que não há fonte alguma ($f=0$), apenas uma equação homogênea $Lu=0$ com um perfil inicial não nulo $u(x,0)=u_0(x)$. Escrevendo $y=(x,t)$ e $s=(\\xi,\\tau)$ para pontos de espaço-tempo, nosso operador é \\[ L = \\partial_t - D\\,\\partial_x^2. \\]",
+      "s4_gf1c.p2": "Para tratar esse caso precisamos do operador adjunto $L^*$, definido de modo que $\\int\\!\\!\\int\\big[v\\,Lu - u\\,L^*v\\big]\\,d\\xi\\,d\\tau$ resulte apenas em termos de borda. Integrando por partes uma vez em $\\tau$ (trocando um sinal) e duas vezes em $\\xi$ (sem troca de sinal), obtemos \\[ L^*v = -\\partial_\\tau v - D\\,\\partial_\\xi^2 v. \\]",
+
+      "nav.s4_gf1d": "4.4 — Abrindo os termos de borda",
+      "s4_gf1d.title": "Abrindo os termos de borda",
+      "s4_gf1d.p1": "Definimos $G(y,s)$ por $L^*_sG(y,s)=\\delta(y-s)$, e substituímos $v=G(y,s)$, $u=\\eta(s)$ na identidade, integrando $\\xi$ em toda a reta e $\\tau$ de $0$ até $t$. Como $L\\eta=0$ e $L^*_sG=\\delta(y-s)$, o lado esquerdo se reduz a $-\\eta(x,t)$.",
+      "s4_gf1d.p2": "O lado direito se divide em duas partes: um termo de fronteira temporal em $\\tau=0$ e $\\tau=t$ (da integração por partes em $\\tau$), e um termo espacial em $\\xi\\to\\pm\\infty$ (da integração por partes dupla em $\\xi$). O termo espacial se anula — tanto $\\eta$ quanto $G$ decaem no infinito — restando \\[ -\\eta(x,t) = \\int_{-\\infty}^{+\\infty}\\!\\Big[G(y,(\\xi,t))\\,\\eta(\\xi,t) - G(y,(\\xi,0))\\,\\eta(\\xi,0)\\Big]\\,d\\xi. \\]",
+
+      "nav.s4_gf1e": "4.4 — Causalidade: só t=0 sobrevive",
+      "s4_gf1e.title": "Causalidade: só t=0 sobrevive",
+      "s4_gf1e.p1": "O termo em $\\tau=t$ se anula pela própria definição da função de Green retardada: o efeito não pode preceder a causa, então $G(y,(\\xi,t))\\equiv0$ no próprio instante de observação — consistente com a gaussiana só \"nascer\" no limite $\\tau\\to t^-$.",
+      "s4_gf1e.p2": "O que resta é exatamente a fórmula de propagação que queríamos: \\[ \\eta(x,t) = \\int_{-\\infty}^{+\\infty} G(y,(\\xi,0))\\,u_0(\\xi)\\,d\\xi. \\]",
+
+      "s4_gf2.title": "A função de Green da nossa equação de difusão",
+      "s4_gf2.p1": "Já resolvemos a resposta a uma fonte pontual unitária na origem — é exatamente o problema do perfume com $N=1$: \\[ G(x,t;0,0) = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-x^2/4Dt}. \\]",
+      "s4_gf2.p2": "Como $D$ é constante, o problema é invariante por translações no espaço e no tempo: $G(x,t;\\xi,\\tau)=G(x-\\xi,\\,t-\\tau)$. Fazendo $\\tau=0$ obtemos exatamente o propagador que precisamos: \\[ G(x-x',t) = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-(x-x')^2/4Dt}. \\]",
+
+      "s4_super.title": "Resolvendo o Rio Tietê por superposição",
+      "s4_super.p1": "Qualquer condição inicial é uma soma de fontes pontuais, cada uma ponderada por quanta concentração realmente havia ali: \\[ \\eta(x,t)=\\int_{-\\infty}^{+\\infty}\\eta(x',0)\\,G(x-x',t)\\,dx'. \\]",
+      "s4_super.p2": "Para o degrau, só $x'<0$ contribui, onde $\\eta(x',0)=C$: \\[ \\eta(x,t) = C\\int_{-\\infty}^{0} G(x-x',t)\\,dx'. \\]",
+
+      "s4_4a.title": "Resolvendo o degrau",
+      "s4_4a.p1": "Só $x'<0$ contribui. Substituindo $w=(x-x')/\\sqrt{4Dt}$ a integral se reduz à função erro complementar: \\[ \\eta(x,t) = \\frac{C}{2}\\,\\mathrm{erfc}\\!\\left(\\frac{x}{\\sqrt{4Dt}}\\right) = \\frac{C}{2}\\left[1-\\mathrm{erf}\\!\\left(\\frac{x}{\\sqrt{4Dt}}\\right)\\right]. \\]",
+
+      "s4_4b.title": "Isso faz sentido?",
+      "s4_4b.p1": "$t\\to 0$: $\\mathrm{erf}(\\mp\\infty)=\\mp1$, recuperando o degrau original ($C$ para $x<0$, $0$ para $x>0$). $t\\to\\infty$: $\\mathrm{erf}(0)=0$, então $\\eta\\to C/2$ em toda parte — mistura completa.",
+      "s4_4b.p2": "Mesma equação de difusão, mesma função de Green, um resultado com aparência bem diferente: um degrau se suaviza numa curva em S, em vez de um pico que se espalha.",
+
+      "nav.s4_exp": "4.5 — O Caso Exponencial",
+      "s4_exp.title": "Um Terceiro Caso: Decaimento Exponencial",
+      "s4_exp.p1": "Um ponto conceitual rápido primeiro. Linearidade significa que $a\\eta_1+b\\eta_2$ é solução sempre que $\\eta_1,\\eta_2$ forem — mas isso não quer dizer que toda nova solução seja uma combinação finita só da gaussiana e da erfc encontradas até agora. O que de fato garante isso é mais forte: qualquer $\\eta_0(x)$ é uma superposição contínua de deltas, então, por linearidade, sua solução é a mesma superposição de $G(x-x',t)$'s. $G$ é o bloco de construção — a gaussiana e a erfc já são, elas mesmas, superposições dele.",
+      "s4_exp.p2": "Considere um poluente despejado apenas na margem $x>0$, já decaindo exponencialmente com a distância: \\[ \\eta(x,0)=\\eta_0(x) = \\begin{cases} e^{-x}, & x>0 \\\\ 0, & x<0. \\end{cases} \\]",
+
+      "s4_exp2.title": "Montando a convolução",
+      "s4_exp2.p1": "Mesma receita de sempre — substituímos $\\eta_0$ na fórmula de propagação, integrando só sobre $x'>0$, onde $\\eta_0(x')=e^{-x'}$: \\[ \\eta(x,t) = \\int_0^{+\\infty} e^{-x'}\\,\\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-(x-x')^2/4Dt}\\,dx'. \\]",
+      "s4_exp2.p2": "O truque, como sempre nessas integrais gaussianas: juntar os dois expoentes e completar o quadrado em $x'$.",
+
+      "s4_exp3.title": "Completando o quadrado",
+      "s4_exp3.p1": "Juntando os dois expoentes e completando o quadrado em $x'$: \\[ -x' - \\frac{(x-x')^2}{4Dt} = (Dt-x) \\;-\\; \\frac{\\big[x'-(x-2Dt)\\big]^2}{4Dt}. \\]",
+      "s4_exp3.p2": "A parte que só depende de $x$ e $t$ sai da integral; o que resta dentro é uma gaussiana simples centrada em $x-2Dt$.",
+
+      "s4_exp4.title": "O resultado",
+      "s4_exp4.p1": "Substituindo $w=[x'-(x-2Dt)]/\\sqrt{4Dt}$, a integral restante vira uma $\\mathrm{erfc}$, exatamente como no caso do Rio Tietê: \\[ \\eta(x,t) = \\frac{1}{2}\\,e^{\\,Dt-x}\\;\\mathrm{erfc}\\!\\left(\\frac{2Dt-x}{2\\sqrt{Dt}}\\right). \\]",
+
+      "s4_exp5.title": "Recupera a condição inicial?",
+      "s4_exp5.p1": "Quando $t\\to0^+$: para $x>0$ o argumento da erfc vai a $-\\infty$, então $\\mathrm{erfc}\\to2$ e $\\eta\\to e^{-x}$; para $x<0$ vai a $+\\infty$, então $\\mathrm{erfc}\\to0$ e $\\eta\\to0$. Os dois limites batem exatamente com $\\eta_0(x)$.",
+      "s4_exp5.p2": "Repare no padrão comum aos três casos: a mesma $G(x-x',t)$ aparece dentro de toda integral — o que muda é só o suporte e o peso $\\eta_0(x')$. É essa universalidade de $G$, não uma coincidência entre as formas finais, que faz o formalismo valer o investimento.",
+
+      "nav.s4_av": "4.6 — Estimativa do Número de Avogadro",
+      "s4_av.title": "Estimativa do Número de Avogadro",
+      "s4_av.p1": "Uma das aplicações mais interessantes da abordagem de Einstein é estimar o número de Avogadro diretamente a partir da estatística do movimento browniano.",
+      "s4_av.p2": "Dividindo $\\eta(x,t)$ pelo número total de partículas $N$ obtemos a probabilidade de encontrar uma partícula entre $x$ e $x+dx$, dado que ela partiu da origem: \\[ P(x,t) = \\frac{\\eta(x,t)}{N} = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-x^2/4Dt}. \\]",
+      "s4_av.p3": "Uma gaussiana com média $\\langle x\\rangle=0$ e variância $\\sigma^2=2Dt$.",
+
+      "s4_av1.title": "Deslocamento quadrático médio",
+      "s4_av1.p1": "Calculando o deslocamento quadrático médio diretamente a partir de $P(x,t)$: \\[ \\langle x^2\\rangle = \\frac{2}{\\sqrt{4\\pi Dt}}\\int_0^{\\infty} x^2\\,e^{-x^2/4Dt}\\,dx = 2Dt. \\]",
+      "s4_av1.p2": "Conhecida como relação de Einstein — a distância quadrática média percorrida por uma partícula cresce linearmente com o tempo, não com o tempo ao quadrado como preveria um movimento balístico.",
+
+      "s4_av2.title": "De D ao número de Avogadro",
+      "s4_av2.p1": "Para partículas esféricas de raio $a$, a lei de Stokes dá o coeficiente de difusão: \\[ D = \\frac{k_B T}{6\\pi\\gamma a}. \\]",
+      "s4_av2.p2": "Substituindo no deslocamento quadrático médio: \\[ \\langle x^2\\rangle = \\frac{RT}{3\\pi N_a\\,\\gamma a}\\,t \\;\\propto\\; t. \\]",
+      "s4_av2.p3": "Como $\\langle x^2\\rangle$, $t$, $\\gamma$ e $a$ são todos diretamente mensuráveis — com um cronômetro e um microscópio, como fez Perrin — essa expressão permite resolver para $N_a$: um argumento estatístico sobre passeios aleatórios virou uma das primeiras medidas diretas do número de Avogadro.",
+
+      "nav.s4_5": "4.7 — Simulação",
+      "s4_5.title": "Vendo a difusão acontecer",
+      "s4_5.intro": "Um passeio aleatório em 1D: cada partícula dá um passo ±s a cada instante. Alterne entre a fonte pontual, o degrau e o decaimento exponencial, e veja o histograma convergir para a curva derivada acima.",
+
+      "ui.ic_label": "Condição inicial",
+      "ui.ic_delta": "Fonte pontual (perfume)",
+      "ui.ic_step": "Metade uniforme (Rio Tietê)",
+      "ui.ic_exponential": "Decaimento exponencial (Rio Tietê)",
+      "ui.play": "Reproduzir",
+      "ui.pause": "Pausar",
+      "ui.reset": "Reiniciar",
+      "ui.t_label": "Passos decorridos (t)",
+
+      "common.placeholder": "Conteúdo em breve."
+    }
+  };
+
+  const flags = { en: "🇺🇸", pt: "🇧🇷" };
+  const labels = { en: "EN", pt: "PT-BR" };
+
+  function setLang(lang){
+    const dict = translations[lang];
+    if(!dict) return;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if(dict[key] !== undefined){
+        el.textContent = dict[key];
+      }
+    });
+
+    document.getElementById('current-flag').textContent = flags[lang];
+    document.getElementById('current-label').textContent = labels[lang];
+    document.getElementById('lang-menu').classList.remove('open');
+    document.documentElement.setAttribute('lang', lang);
+    localStorage.setItem('preferredLang', lang);
+
+    renderMath();
+    if(window.Reveal) Reveal.layout();
+  }
+
+  document.addEventListener('click', (e) => {
+    const box = document.getElementById('lang-switcher');
+    if(!box.contains(e.target)) document.getElementById('lang-menu').classList.remove('open');
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('preferredLang');
+    if(saved && translations[saved]) setLang(saved);
+  });
+</script>
+
+<!-- ============================================================ CLT simulation ============================================================ -->
+<script>
+  const DISTS = {
+    uniform:     { sample: () => Math.random(),                         mean: 0.5, variance: 1/12 },
+    exponential: { sample: () => -Math.log(1 - Math.random()),          mean: 1,   variance: 1 },
+    bernoulli:   { sample: () => (Math.random() < 0.5 ? 0 : 1),         mean: 0.5, variance: 0.25 },
+    dice:        { sample: () => Math.floor(Math.random() * 6) + 1,     mean: 3.5, variance: 35/12 }
+  };
+
+  let currentDist = 'uniform';
+  let currentN = 1;
+  const TRIALS = 3000;
+  let playTimer = null;
+
+  function selectDist(key){
+    currentDist = key;
+    document.querySelectorAll('.dist-btn[data-dist]').forEach(b => {
+      b.classList.toggle('active', b.dataset.dist === key);
+    });
+    drawSimulation();
+  }
+
+  function onNChange(val){
+    currentN = parseInt(val, 10);
+    document.getElementById('n-value').textContent = currentN;
+    drawSimulation();
+  }
+
+  function resample(){ drawSimulation(); }
+
+  function togglePlay(){
+    const btn = document.getElementById('play-btn');
+    if(playTimer){
+      clearInterval(playTimer);
+      playTimer = null;
+      btn.classList.remove('playing');
+      btn.textContent = translations[currentLangSafe()]['ui.animate'];
+      return;
+    }
+    btn.classList.add('playing');
+    btn.textContent = translations[currentLangSafe()]['ui.stop'];
+    const slider = document.getElementById('n-slider');
+    playTimer = setInterval(() => {
+      let n = parseInt(slider.value, 10) + 1;
+      if(n > 60) n = 1;
+      slider.value = n;
+      onNChange(n);
+    }, 280);
+  }
+
+  function currentLangSafe(){
+    const saved = localStorage.getItem('preferredLang');
+    return (saved && translations[saved]) ? saved : 'en';
+  }
+
+  function normalPdf(z){
+    return Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI);
+  }
+
+  function runTrials(distKey, n, trials){
+    const dist = DISTS[distKey];
+    const denom = Math.sqrt(n * dist.variance);
+    const zs = new Float64Array(trials);
+    for(let t = 0; t < trials; t++){
+      let sum = 0;
+      for(let k = 0; k < n; k++) sum += dist.sample();
+      zs[t] = (sum - n * dist.mean) / denom;
+    }
+    return zs;
+  }
+
+  function drawSimulation(){
+    const zs = runTrials(currentDist, currentN, TRIALS);
+
+    // empirical stats
+    let mean = 0;
+    for(let i = 0; i < zs.length; i++) mean += zs[i];
+    mean /= zs.length;
+    let variance = 0;
+    for(let i = 0; i < zs.length; i++) variance += (zs[i] - mean) ** 2;
+    variance /= zs.length;
+    document.getElementById('stat-mean').textContent = mean.toFixed(3);
+    document.getElementById('stat-std').textContent = Math.sqrt(variance).toFixed(3);
+
+    // histogram binning
+    const RANGE = 4.5, BINS = 44;
+    const binWidth = (2 * RANGE) / BINS;
+    const counts = new Array(BINS).fill(0);
+    for(let i = 0; i < zs.length; i++){
+      let idx = Math.floor((zs[i] + RANGE) / binWidth);
+      if(idx >= 0 && idx < BINS) counts[idx]++;
+    }
+    const density = counts.map(c => c / (zs.length * binWidth));
+    const maxDensity = Math.max(...density, normalPdf(0)) * 1.15;
+
+    // canvas draw
+    const canvas = document.getElementById('hist-canvas');
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || 700, cssH = 360;
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const padL = 40, padB = 30, padT = 14, padR = 14;
+    const plotW = cssW - padL - padR, plotH = cssH - padT - padB;
+
+    // axes
+    ctx.strokeStyle = '#2a3454';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.stroke();
+
+    // histogram bars
+    ctx.fillStyle = 'rgba(87,199,184,0.55)';
+    for(let i = 0; i < BINS; i++){
+      const x0 = padL + (i / BINS) * plotW;
+      const barW = plotW / BINS;
+      const h = (density[i] / maxDensity) * plotH;
+      ctx.fillRect(x0 + 1, padT + plotH - h, barW - 2, h);
+    }
+
+    // normal curve overlay
+    ctx.strokeStyle = '#f2a65a';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    for(let px = 0; px <= plotW; px++){
+      const z = -RANGE + (px / plotW) * (2 * RANGE);
+      const y = padT + plotH - (normalPdf(z) / maxDensity) * plotH;
+      if(px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+    }
+    ctx.stroke();
+
+    // x-axis labels
+    ctx.fillStyle = '#8891a8';
+    ctx.font = '11px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    for(let z = -4; z <= 4; z += 2){
+      const px = padL + ((z + RANGE) / (2 * RANGE)) * plotW;
+      ctx.fillText(z.toString(), px, padT + plotH + 18);
+    }
+    ctx.fillText('Z', padL + plotW - 6, padT + plotH + 18);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(drawSimulation, 60);
+  });
+  window.addEventListener('resize', () => drawSimulation());
+</script>
+
+<!-- ============================================================ two-chamber (A/B + tube) simulation ============================================================ -->
+<script>
+  const TB_BOX = { x0:135, x1:335, y0:90, y1:290, wallX0:335, wallX1:365, x2:365, x3:565 };
+  const TB_DOOR_H = 50;
+  const TB_DOOR_Y0 = (TB_BOX.y0+TB_BOX.y1)/2 - TB_DOOR_H/2;
+  const TB_DOOR_Y1 = (TB_BOX.y0+TB_BOX.y1)/2 + TB_DOOR_H/2;
+  const TB_STEP = 6;
+  const TB_DIVIDER_X = 350;
+
+  let tbParticles = [];
+  let tbDoorOpen = false;
+  let tbTimer = null;
+
+  function initTwoBox(){
+    const nA = parseInt(document.getElementById('na-slider').value, 10);
+    const nB = parseInt(document.getElementById('nb-slider').value, 10);
+    tbParticles = [];
+    const cAx = (TB_BOX.x0+TB_BOX.x1)/2, cAy = (TB_BOX.y0+TB_BOX.y1)/2;
+    const cBx = (TB_BOX.x2+TB_BOX.x3)/2, cBy = cAy;
+    for(let i=0;i<nA;i++) tbParticles.push({x: cAx+(Math.random()-0.5)*6, y: cAy+(Math.random()-0.5)*6, origin:'A'});
+    for(let i=0;i<nB;i++) tbParticles.push({x: cBx+(Math.random()-0.5)*6, y: cBy+(Math.random()-0.5)*6, origin:'B'});
+  }
+
+  function toggleTube(){
+    tbDoorOpen = !tbDoorOpen;
+    const btn = document.getElementById('tube-btn');
+    btn.textContent = translations[currentLangSafe()][tbDoorOpen ? 'ui.close_tube' : 'ui.open_tube'];
+  }
+
+  function toggleTwoBoxPlay(){
+    const btn = document.getElementById('twobox-play-btn');
+    if(tbTimer){
+      clearInterval(tbTimer);
+      tbTimer = null;
+      btn.textContent = translations[currentLangSafe()]['ui.play'];
+      return;
+    }
+    btn.textContent = translations[currentLangSafe()]['ui.pause'];
+    tbTimer = setInterval(() => { stepTwoBox(); drawTwoBox(); }, 30);
+  }
+
+  function resetTwoBox(){
+    if(tbTimer){ clearInterval(tbTimer); tbTimer = null; }
+    const btn = document.getElementById('twobox-play-btn');
+    if(btn) btn.textContent = translations[currentLangSafe()]['ui.play'];
+    tbDoorOpen = false;
+    const tubeBtn = document.getElementById('tube-btn');
+    if(tubeBtn) tubeBtn.textContent = translations[currentLangSafe()]['ui.open_tube'];
+    initTwoBox();
+    drawTwoBox();
+  }
+
+  function stepTwoBox(){
+    for(const p of tbParticles){
+      let nx = p.x + (Math.random()*2-1)*TB_STEP;
+      let ny = p.y + (Math.random()*2-1)*TB_STEP;
+
+      if(ny < TB_BOX.y0) ny = TB_BOX.y0 + (TB_BOX.y0-ny);
+      if(ny > TB_BOX.y1) ny = TB_BOX.y1 - (ny-TB_BOX.y1);
+
+      if(nx < TB_BOX.x0) nx = TB_BOX.x0 + (TB_BOX.x0-nx);
+      if(nx > TB_BOX.x3) nx = TB_BOX.x3 - (nx-TB_BOX.x3);
+
+      if(nx > TB_BOX.wallX0 && nx < TB_BOX.wallX1){
+        const inDoor = tbDoorOpen && ny >= TB_DOOR_Y0 && ny <= TB_DOOR_Y1;
+        if(!inDoor){
+          if(p.x <= TB_BOX.wallX0) nx = TB_BOX.wallX0 - (nx-TB_BOX.wallX0);
+          else nx = TB_BOX.wallX1 + (TB_BOX.wallX1-nx);
+        }
+      }
+      p.x = nx; p.y = ny;
+    }
+  }
+
+  function drawTwoBox(){
+    const canvas = document.getElementById('twobox-canvas');
+    if(!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || 700, cssH = 380;
+    canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,cssW,cssH);
+
+    ctx.strokeStyle = '#2a3454'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(TB_BOX.x0, TB_BOX.y0, TB_BOX.x1-TB_BOX.x0, TB_BOX.y1-TB_BOX.y0);
+    ctx.strokeRect(TB_BOX.x2, TB_BOX.y0, TB_BOX.x3-TB_BOX.x2, TB_BOX.y1-TB_BOX.y0);
+
+    ctx.fillStyle = tbDoorOpen ? 'rgba(87,199,184,0.18)' : '#161d2e';
+    ctx.fillRect(TB_BOX.wallX0, TB_BOX.y0, TB_BOX.wallX1-TB_BOX.wallX0, TB_DOOR_Y0-TB_BOX.y0);
+    ctx.fillRect(TB_BOX.wallX0, TB_DOOR_Y1, TB_BOX.wallX1-TB_BOX.wallX0, TB_BOX.y1-TB_DOOR_Y1);
+    ctx.strokeStyle = tbDoorOpen ? '#57c7b8' : '#2a3454';
+    ctx.strokeRect(TB_BOX.wallX0, TB_BOX.y0, TB_BOX.wallX1-TB_BOX.wallX0, TB_DOOR_Y0-TB_BOX.y0);
+    ctx.strokeRect(TB_BOX.wallX0, TB_DOOR_Y1, TB_BOX.wallX1-TB_BOX.wallX0, TB_BOX.y1-TB_DOOR_Y1);
+
+    ctx.fillStyle = '#8891a8';
+    ctx.font = '13px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('A', (TB_BOX.x0+TB_BOX.x1)/2, TB_BOX.y0-12);
+    ctx.fillText('B', (TB_BOX.x2+TB_BOX.x3)/2, TB_BOX.y0-12);
+
+    let countA=0, countB=0;
+    for(const p of tbParticles){
+      ctx.fillStyle = p.origin === 'A' ? 'rgba(87,199,184,0.85)' : 'rgba(242,166,90,0.85)';
+      ctx.beginPath(); ctx.arc(p.x,p.y,2.3,0,Math.PI*2); ctx.fill();
+      if(p.x < TB_DIVIDER_X) countA++; else countB++;
+    }
+    const aEl = document.getElementById('count-a-value'), bEl = document.getElementById('count-b-value');
+    if(aEl) aEl.textContent = countA;
+    if(bEl) bEl.textContent = countB;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const naS = document.getElementById('na-slider'), nbS = document.getElementById('nb-slider');
+    if(naS) naS.addEventListener('input', () => { document.getElementById('na-value').textContent = naS.value; });
+    if(nbS) nbS.addEventListener('input', () => { document.getElementById('nb-value').textContent = nbS.value; });
+    initTwoBox();
+    setTimeout(drawTwoBox, 90);
+  });
+  window.addEventListener('resize', () => drawTwoBox());
+</script>
+
+<!-- ============================================================ diffusion (perfume / Rio Tietê) simulation ============================================================ -->
+<script>
+  function erf(x){
+    const s = x < 0 ? -1 : 1; x = Math.abs(x);
+    const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+    const t = 1/(1+p*x);
+    const y = 1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+    return s*y;
+  }
+  function erfc(x){ return 1-erf(x); }
+
+  const DIFF_XMIN = -60, DIFF_XMAX = 60;
+  const DIFF_N = 700;
+  const DIFF_STEP = 2;
+  const DIFF_D = (DIFF_STEP*DIFF_STEP)/2;
+  const DIFF_EXP_RATE = 0.08;
+  let diffIC = 'delta';
+  let diffParticles = [];
+  let diffSteps = 0;
+  let diffTimer = null;
+
+  function initDiffParticles(){
+    diffParticles = new Float64Array(DIFF_N);
+    if(diffIC === 'delta'){
+      for(let i=0;i<DIFF_N;i++) diffParticles[i] = 0;
+    } else if(diffIC === 'exponential'){
+      for(let i=0;i<DIFF_N;i++){
+        let x;
+        do { x = -Math.log(1-Math.random())/DIFF_EXP_RATE; } while(x > DIFF_XMAX);
+        diffParticles[i] = x;
+      }
+    } else {
+      for(let i=0;i<DIFF_N;i++) diffParticles[i] = DIFF_XMIN + Math.random()*(0-DIFF_XMIN);
+    }
+    diffSteps = 0;
+  }
+
+  function startDiffPlay(){
+    if(diffTimer) return;
+    const btn = document.getElementById('diff-play-btn');
+    if(btn) btn.textContent = translations[currentLangSafe()]['ui.pause'];
+    diffTimer = setInterval(() => {
+      stepDiffusion();
+      drawDiffusion();
+    }, 45);
+  }
+
+  function stopDiffPlay(){
+    if(diffTimer){ clearInterval(diffTimer); diffTimer = null; }
+    const btn = document.getElementById('diff-play-btn');
+    if(btn) btn.textContent = translations[currentLangSafe()]['ui.play'];
+  }
+
+  function selectIC(ic){
+    diffIC = ic;
+    document.querySelectorAll('.sim-controls .dist-btn[data-ic]').forEach(b=>{
+      b.classList.toggle('active', b.dataset.ic === ic);
+    });
+    stopDiffPlay();
+    initDiffParticles();
+    drawDiffusion();
+    startDiffPlay();
+  }
+
+  function resetDiff(){
+    stopDiffPlay();
+    initDiffParticles();
+    drawDiffusion();
+  }
+
+  function stepDiffusion(){
+    for(let i=0;i<diffParticles.length;i++){
+      diffParticles[i] += (Math.random() < 0.5 ? -DIFF_STEP : DIFF_STEP);
+    }
+    diffSteps++;
+  }
+
+  function toggleDiffPlay(){
+    if(diffTimer) stopDiffPlay(); else startDiffPlay();
+  }
+
+  function xToPx(x, w){ return ((x - DIFF_XMIN) / (DIFF_XMAX - DIFF_XMIN)) * w; }
+
+  function drawParticleCanvas(){
+    const canvas = document.getElementById('particle-canvas');
+    if(!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || 700, cssH = 130;
+    canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,cssW,cssH);
+    ctx.strokeStyle = '#2a3454';
+    ctx.beginPath();
+    ctx.moveTo(0, cssH/2); ctx.lineTo(cssW, cssH/2);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(87,199,184,0.75)';
+    for(let i=0;i<diffParticles.length;i++){
+      const x = diffParticles[i];
+      if(x < DIFF_XMIN || x > DIFF_XMAX) continue;
+      const px = xToPx(x, cssW);
+      const py = cssH/2 + (((i*2654435761)%1000)/1000 - 0.5) * (cssH*0.7);
+      ctx.beginPath();
+      ctx.arc(px, py, 2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawDiffusionHist(){
+    const canvas = document.getElementById('diff-hist-canvas');
+    if(!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || 700, cssH = 300;
+    canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,cssW,cssH);
+
+    const BINS = 48;
+    const binWidth = (DIFF_XMAX-DIFF_XMIN)/BINS;
+    const counts = new Array(BINS).fill(0);
+    for(let i=0;i<diffParticles.length;i++){
+      const idx = Math.floor((diffParticles[i]-DIFF_XMIN)/binWidth);
+      if(idx>=0 && idx<BINS) counts[idx]++;
+    }
+    const density = counts.map(c => c/binWidth);
+
+    const t = Math.max(diffSteps, 0.5);
+    let theory;
+    if(diffIC === 'delta'){
+      theory = (x) => (DIFF_N/Math.sqrt(4*Math.PI*DIFF_D*t)) * Math.exp(-(x*x)/(4*DIFF_D*t));
+    } else if(diffIC === 'exponential'){
+      const lam = DIFF_EXP_RATE;
+      theory = (x) => (DIFF_N*lam/2) * Math.exp(DIFF_D*t*lam*lam - lam*x) *
+        erfc((2*DIFF_D*t*lam - x)/(2*Math.sqrt(DIFF_D*t)));
+    } else {
+      const C0 = DIFF_N/(0-DIFF_XMIN);
+      theory = (x) => (C0/2)*erfc(x/Math.sqrt(4*DIFF_D*t));
+    }
+    let maxD = 0;
+    for(let i=0;i<BINS;i++){
+      const xc = DIFF_XMIN + (i+0.5)*binWidth;
+      maxD = Math.max(maxD, density[i], theory(xc));
+    }
+    maxD *= 1.15;
+
+    const padL=40,padB=30,padT=14,padR=14;
+    const plotW=cssW-padL-padR, plotH=cssH-padT-padB;
+    ctx.strokeStyle='#2a3454'; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH);
+    ctx.stroke();
+
+    ctx.fillStyle='rgba(87,199,184,0.55)';
+    for(let i=0;i<BINS;i++){
+      const x0=padL+(i/BINS)*plotW, barW=plotW/BINS;
+      const h=(density[i]/maxD)*plotH;
+      ctx.fillRect(x0+1, padT+plotH-h, barW-2, h);
+    }
+
+    ctx.strokeStyle='#f2a65a'; ctx.lineWidth=2.4;
+    ctx.beginPath();
+    for(let px=0; px<=plotW; px++){
+      const x = DIFF_XMIN + (px/plotW)*(DIFF_XMAX-DIFF_XMIN);
+      const y = padT+plotH-(theory(x)/maxD)*plotH;
+      if(px===0) ctx.moveTo(padL+px,y); else ctx.lineTo(padL+px,y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle='#a3adc4'; ctx.font='11px IBM Plex Mono, monospace'; ctx.textAlign='center';
+    for(let x=-60;x<=60;x+=20){
+      const px = padL + ((x-DIFF_XMIN)/(DIFF_XMAX-DIFF_XMIN))*plotW;
+      ctx.fillText(x.toString(), px, padT+plotH+18);
+    }
+
+    const tEl = document.getElementById('diff-t-value');
+    if(tEl) tEl.textContent = diffSteps;
+  }
+
+  function drawDiffusion(){
+    drawParticleCanvas();
+    drawDiffusionHist();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    initDiffParticles();
+    setTimeout(drawDiffusion, 80);
+  });
+  window.addEventListener('resize', () => drawDiffusion());
+</script>
+
+<!-- ============================================================ hero particle animation (signature element) ============================================================ -->
+<script>
+  (function(){
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let W = 0, H = 0, particles = [];
+
+    function resize(){
+      W = canvas.clientWidth;
+      H = canvas.clientHeight;
+      canvas.width = W;
+      canvas.height = H;
+      particles = Array.from({length: N_PARTICLES}, () => ({
+        x: W/2, y: H/2, vx: 0, vy: 0
+      }));
+      ctx.fillStyle = '#0d1321';
+      ctx.fillRect(0, 0, W, H);
+    }
+    const N_PARTICLES = 120;
+
+    function step(){
+      ctx.fillStyle = 'rgba(13,19,33,0.08)';
+      ctx.fillRect(0, 0, W, H);
+      particles.forEach(p => {
+        p.vx += (Math.random() - 0.5) * 0.7;
+        p.vy += (Math.random() - 0.5) * 0.7;
+        p.vx *= 0.94; p.vy *= 0.94;
+        p.x += p.vx; p.y += p.vy;
+        if(p.x < 4 || p.x > W-4) p.vx *= -1;
+        if(p.y < 4 || p.y > H-4) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.4, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(87,199,184,0.85)';
+        ctx.fill();
+      });
+      if(!reduceMotion) requestAnimationFrame(step);
+    }
+
+    window.addEventListener('resize', resize);
+    setTimeout(() => {
+      resize();
+      if(!reduceMotion) requestAnimationFrame(step);
+    }, 80);
+  })();
+</script>
+
+</body>
+</html>
