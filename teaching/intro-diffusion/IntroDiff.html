@@ -483,7 +483,7 @@
     <section>
       <span class="eyebrow" data-i18n="nav.s4">04 — Applications</span>
       <h1 data-i18n="s4.title">Applications of the Diffusion Problem</h1>
-      <p data-i18n="s4.intro">Two very different physical settings, governed by the same diffusion equation, solved with the same tools — only the initial condition changes.</p>
+      <p data-i18n="s4.intro">Three very different physical settings, governed by the same diffusion equation, solved with the same tools — only the initial condition changes.</p>
     </section>
 
     <section>
@@ -511,17 +511,29 @@
 
     <section>
       <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
-      <h3 data-i18n="s4_3b2.title">A useful analogy: diagonalizing a matrix</h3>
-      <p data-i18n="s4_3b2.p1">Recall solving a linear system of ODEs, $\dot{\mathbf{v}} = A\mathbf{v}$: we diagonalize $A$ using its eigenvectors $\mathbf{e}_i$ (with $A\mathbf{e}_i=\lambda_i\mathbf{e}_i$), write $\mathbf{v}=\sum_i c_i(t)\,\mathbf{e}_i$, and the coupled system decouples into $\dot c_i = \lambda_i c_i$ — one independent scalar equation per eigenvalue.</p>
-      <p data-i18n="s4_3b2.p2">Fourier does exactly this for $\partial^2/\partial x^2$ acting on functions of $x$: its "eigenvectors" are the plane waves $e^{ikx}$, with "eigenvalues" $-k^2$. Decomposing $\eta$ into Fourier modes is diagonalizing an infinite-dimensional operator — same idea, just with the discrete index $i$ replaced by the continuous variable $k$.</p>
+      <h3 data-i18n="s4_3b2.title">Separation of variables</h3>
+      <p data-i18n="s4_3b2.p1">Assume the solution factors as $\eta(x,t)=\omega(x)\,\gamma(t)$ and substitute into the diffusion equation:
+      \[ \omega(x)\,\gamma'(t) = D\,\omega''(x)\,\gamma(t). \]</p>
+      <p data-i18n="s4_3b2.p2">Dividing both sides by $\omega(x)\gamma(t)$ separates the two variables completely:
+      \[ \frac{\gamma'(t)}{\gamma(t)} = D\,\frac{\omega''(x)}{\omega(x)}. \]</p>
     </section>
 
     <section>
       <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
-      <h3 data-i18n="s4_3c.title">A family of ordinary differential equations</h3>
-      <p data-i18n="s4_3c.p1">Writing $\eta(x,t)$ as a superposition of modes $\eta_k(t)e^{ikx}$, the diffusion equation becomes, mode by mode:
-      \[ \frac{\partial \eta_k}{\partial t} = -Dk^2\,\eta_k, \]</p>
-      <p data-i18n="s4_3c.p2">with immediate solution $\eta_k(t)=\eta_k(0)\,e^{-Dk^2t}$ — sharp, high-$k$ features decay fastest, exactly what smoothing should look like.</p>
+      <h3 data-i18n="s4_3b3.title">Same constant on both sides</h3>
+      <p data-i18n="s4_3b3.p1">The left side depends only on $t$; the right side depends only on $x$. For the equality to hold at every $(x,t)$, both sides must equal the same constant — call it $-Dk^2$:
+      \[ \frac{\gamma'}{\gamma} = -Dk^2, \qquad \frac{\omega''}{\omega} = -k^2. \]</p>
+      <p data-i18n="s4_3b3.p2">Two ordinary differential equations, one in $t$ and one in $x$ — exactly the simplification we wanted from the PDE.</p>
+    </section>
+
+    <section>
+      <span class="eyebrow" data-i18n="nav.s4_3">4.3 — The Perfume Case</span>
+      <h3 data-i18n="s4_3c.title">From separation to Fourier</h3>
+      <p data-i18n="s4_3c.p1">Solving each equation: $\omega''=-k^2\omega$ gives $\omega(x)=e^{ikx}$ — precisely the eigenfunction condition from before, arrived at a different way. And $\gamma'=-Dk^2\gamma$ gives $\gamma(t)=e^{-Dk^2t}$.</p>
+      <p data-i18n="s4_3c.p2">This works for any $k$, giving one solution $e^{ikx}e^{-Dk^2t}$ per value of $k$. Since the equation is linear, the general solution is a superposition of all of them:
+      \[ \eta(x,t) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} \eta_k(t)\,e^{ikx}\,dk, \qquad \eta_k(t)=\eta_k(0)\,e^{-Dk^2t}. \]</p>
+      <p data-i18n="s4_3c.p3">That's the Fourier representation we've been using — separation of variables applied to every $k$ at once.</p>
+      <p data-i18n="s4_3c.p4">Physically, $\gamma(t)=e^{-Dk^2t}$ tells us large $k$ (rapid spatial oscillation) decays fastest — exactly what smoothing should look like.</p>
     </section>
 
     <section>
@@ -915,7 +927,7 @@
 
       "nav.s4": "04 — Applications",
       "s4.title": "Applications of the Diffusion Problem",
-      "s4.intro": "Two very different physical settings, governed by the same diffusion equation, solved with the same tools — only the initial condition changes.",
+      "s4.intro": "Three very different physical settings, governed by the same diffusion equation, solved with the same tools — only the initial condition changes.",
 
       "nav.s4_3": "4.3 — The Perfume Case",
       "s4_3.title": "The Perfume Case",
@@ -930,13 +942,19 @@
       "s4_3b.p1": "Most textbooks simply state the Gaussian solution and check that it works, as if it had been guessed. Instead, notice that $e^{ikx}$ is an eigenfunction of $\\partial^2/\\partial x^2$: \\[ \\frac{\\partial^2}{\\partial x^2}e^{ikx}=-k^2 e^{ikx}. \\]",
       "s4_3b.p2": "Decomposing $\\eta$ into plane waves turns the PDE — which couples every $x$ together — into independent ODEs, one per mode $k$. That's why Fourier is the natural tool here, not a trick.",
 
-      "s4_3b2.title": "A useful analogy: diagonalizing a matrix",
-      "s4_3b2.p1": "Recall solving a linear system of ODEs, $\\dot{\\mathbf{v}} = A\\mathbf{v}$: we diagonalize $A$ using its eigenvectors $\\mathbf{e}_i$ (with $A\\mathbf{e}_i=\\lambda_i\\mathbf{e}_i$), write $\\mathbf{v}=\\sum_i c_i(t)\\,\\mathbf{e}_i$, and the coupled system decouples into $\\dot c_i = \\lambda_i c_i$ — one independent scalar equation per eigenvalue.",
-      "s4_3b2.p2": "Fourier does exactly this for $\\partial^2/\\partial x^2$ acting on functions of $x$: its \"eigenvectors\" are the plane waves $e^{ikx}$, with \"eigenvalues\" $-k^2$. Decomposing $\\eta$ into Fourier modes is diagonalizing an infinite-dimensional operator — same idea, just with the discrete index $i$ replaced by the continuous variable $k$.",
+      "s4_3b2.title": "Separation of variables",
+      "s4_3b2.p1": "Assume the solution factors as $\\eta(x,t)=\\omega(x)\\,\\gamma(t)$ and substitute into the diffusion equation: \\[ \\omega(x)\\,\\gamma'(t) = D\\,\\omega''(x)\\,\\gamma(t). \\]",
+      "s4_3b2.p2": "Dividing both sides by $\\omega(x)\\gamma(t)$ separates the two variables completely: \\[ \\frac{\\gamma'(t)}{\\gamma(t)} = D\\,\\frac{\\omega''(x)}{\\omega(x)}. \\]",
 
-      "s4_3c.title": "A family of ordinary differential equations",
-      "s4_3c.p1": "Writing $\\eta(x,t)$ as a superposition of modes $\\eta_k(t)e^{ikx}$, the diffusion equation becomes, mode by mode: \\[ \\frac{\\partial \\eta_k}{\\partial t} = -Dk^2\\,\\eta_k, \\]",
-      "s4_3c.p2": "with immediate solution $\\eta_k(t)=\\eta_k(0)\\,e^{-Dk^2t}$ — sharp, high-$k$ features decay fastest, exactly what smoothing should look like.",
+      "s4_3b3.title": "Same constant on both sides",
+      "s4_3b3.p1": "The left side depends only on $t$; the right side depends only on $x$. For the equality to hold at every $(x,t)$, both sides must equal the same constant — call it $-Dk^2$: \\[ \\frac{\\gamma'}{\\gamma} = -Dk^2, \\qquad \\frac{\\omega''}{\\omega} = -k^2. \\]",
+      "s4_3b3.p2": "Two ordinary differential equations, one in $t$ and one in $x$ — exactly the simplification we wanted from the PDE.",
+
+      "s4_3c.title": "From separation to Fourier",
+      "s4_3c.p1": "Solving each equation: $\\omega''=-k^2\\omega$ gives $\\omega(x)=e^{ikx}$ — precisely the eigenfunction condition from before, arrived at a different way. And $\\gamma'=-Dk^2\\gamma$ gives $\\gamma(t)=e^{-Dk^2t}$.",
+      "s4_3c.p2": "This works for any $k$, giving one solution $e^{ikx}e^{-Dk^2t}$ per value of $k$. Since the equation is linear, the general solution is a superposition of all of them: \\[ \\eta(x,t) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta_k(t)\\,e^{ikx}\\,dk, \\qquad \\eta_k(t)=\\eta_k(0)\\,e^{-Dk^2t}. \\]",
+      "s4_3c.p3": "That's the Fourier representation we've been using — separation of variables applied to every $k$ at once.",
+      "s4_3c.p4": "Physically, $\\gamma(t)=e^{-Dk^2t}$ tells us large $k$ (rapid spatial oscillation) decays fastest — exactly what smoothing should look like.",
 
       "s4_3d.title": "Applying the initial condition",
       "s4_3d.p1": "$\\eta_k(0)$ comes from transforming $\\eta(x,0)$ itself: \\[ \\eta_k(0) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta(x,0)\\,e^{-ikx}\\,dx. \\]",
@@ -959,8 +977,8 @@
       "s4_3h.title": "A delta becomes a Gaussian",
       "s4_3h.p1": "A delta at $t=0$ evolves into a Gaussian that widens as $t$ grows — exactly the shape we'll watch form in the simulation.",
 
-      "nav.s4_4": "4.4 — The Rio Tiet\u00ea Case",
-      "s4_4.title": "The Rio Tiet\u00ea Case",
+      "nav.s4_4": "4.4 — The Tiet\u00ea River Case",
+      "s4_4.title": "The Tiet\u00ea River Case",
       "s4_4.p1": "Now imagine a river, also treated as one-dimensional. A pollutant is dumped uniformly along the entire left bank, giving a step initial condition:",
 
       "s4_4pde.title": "The diffusion equation, once more",
@@ -1000,7 +1018,7 @@
       "s4_gf2.p1": "We already solved for the response to a unit point source at the origin — that's exactly the perfume problem with $N=1$: \\[ G(x,t;0,0) = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-x^2/4Dt}. \\]",
       "s4_gf2.p2": "Since $D$ is constant, the problem is invariant under translations in space and time: $G(x,t;\\xi,\\tau)=G(x-\\xi,\\,t-\\tau)$. Setting $\\tau=0$ gives exactly the propagator we need: \\[ G(x-x',t) = \\frac{1}{\\sqrt{4\\pi Dt}}\\,e^{-(x-x')^2/4Dt}. \\]",
 
-      "s4_super.title": "Solving the Rio Tiet\u00ea by superposition",
+      "s4_super.title": "Solving the Tiet\u00ea River by superposition",
       "s4_super.p1": "Any initial condition is a sum of point sources, each weighted by how much concentration was actually there: \\[ \\eta(x,t)=\\int_{-\\infty}^{+\\infty}\\eta(x',0)\\,G(x-x',t)\\,dx'. \\]",
       "s4_super.p2": "For the step, only $x'<0$ contributes, where $\\eta(x',0)=C$: \\[ \\eta(x,t) = C\\int_{-\\infty}^{0} G(x-x',t)\\,dx'. \\]",
 
@@ -1025,7 +1043,7 @@
       "s4_exp3.p2": "The part that only depends on $x$ and $t$ pulls out of the integral; what's left inside is a plain Gaussian centered at $x-2Dt$.",
 
       "s4_exp4.title": "The result",
-      "s4_exp4.p1": "Substituting $w=[x'-(x-2Dt)]/\\sqrt{4Dt}$ turns the remaining integral into an $\\mathrm{erfc}$, exactly as in the Rio Tietê case: \\[ \\eta(x,t) = \\frac{1}{2}\\,e^{\\,Dt-x}\\;\\mathrm{erfc}\\!\\left(\\frac{2Dt-x}{2\\sqrt{Dt}}\\right). \\]",
+      "s4_exp4.p1": "Substituting $w=[x'-(x-2Dt)]/\\sqrt{4Dt}$ turns the remaining integral into an $\\mathrm{erfc}$, exactly as in the Tietê River case: \\[ \\eta(x,t) = \\frac{1}{2}\\,e^{\\,Dt-x}\\;\\mathrm{erfc}\\!\\left(\\frac{2Dt-x}{2\\sqrt{Dt}}\\right). \\]",
 
       "s4_exp5.title": "Does it recover the initial condition?",
       "s4_exp5.p1": "As $t\\to0^+$: for $x>0$ the erfc argument goes to $-\\infty$, so $\\mathrm{erfc}\\to2$ and $\\eta\\to e^{-x}$; for $x<0$ it goes to $+\\infty$, so $\\mathrm{erfc}\\to0$ and $\\eta\\to0$. Both limits match $\\eta_0(x)$ exactly.",
@@ -1052,8 +1070,8 @@
 
       "ui.ic_label": "Initial condition",
       "ui.ic_delta": "Point source (perfume)",
-      "ui.ic_step": "Uniform half (Rio Tiet\u00ea)",
-      "ui.ic_exponential": "Exponential decay (Rio Tiet\u00ea)",
+      "ui.ic_step": "Uniform half (Tiet\u00ea River)",
+      "ui.ic_exponential": "Exponential decay (Tiet\u00ea River)",
       "ui.play": "Play",
       "ui.pause": "Pause",
       "ui.reset": "Reset",
@@ -1183,7 +1201,7 @@
 
       "nav.s4": "04 — Aplicações",
       "s4.title": "Aplicações do Problema da Difusão",
-      "s4.intro": "Dois cenários físicos bem diferentes, governados pela mesma equação de difusão, resolvidos com as mesmas ferramentas — só a condição inicial muda.",
+      "s4.intro": "Três cenários físicos bem diferentes, governados pela mesma equação de difusão, resolvidos com as mesmas ferramentas — só a condição inicial muda.",
 
       "nav.s4_3": "4.3 — O Caso do Perfume",
       "s4_3.title": "O Caso do Perfume",
@@ -1198,13 +1216,19 @@
       "s4_3b.p1": "A maioria dos livros-texto simplesmente apresenta a solução gaussiana e verifica que ela funciona, como se tivesse sido adivinhada. Em vez disso, note que $e^{ikx}$ é autofunção de $\\partial^2/\\partial x^2$: \\[ \\frac{\\partial^2}{\\partial x^2}e^{ikx}=-k^2 e^{ikx}. \\]",
       "s4_3b.p2": "Decompor $\\eta$ em ondas planas transforma a EDP — que acopla todo $x$ — em EDOs independentes, uma por modo $k$. É por isso que Fourier é a ferramenta natural aqui, não um truque.",
 
-      "s4_3b2.title": "Uma analogia útil: diagonalizar uma matriz",
-      "s4_3b2.p1": "Lembre de resolver um sistema linear de EDOs, $\\dot{\\mathbf{v}} = A\\mathbf{v}$: diagonalizamos $A$ usando seus autovetores $\\mathbf{e}_i$ (com $A\\mathbf{e}_i=\\lambda_i\\mathbf{e}_i$), escrevemos $\\mathbf{v}=\\sum_i c_i(t)\\,\\mathbf{e}_i$, e o sistema acoplado se desacopla em $\\dot c_i = \\lambda_i c_i$ — uma equação escalar independente por autovalor.",
-      "s4_3b2.p2": "Fourier faz exatamente isso para $\\partial^2/\\partial x^2$ agindo sobre funções de $x$: seus \"autovetores\" são as ondas planas $e^{ikx}$, com \"autovalores\" $-k^2$. Decompor $\\eta$ em modos de Fourier é diagonalizar um operador de dimensão infinita — a mesma ideia, só trocando o índice discreto $i$ pela variável contínua $k$.",
+      "s4_3b2.title": "Separação de variáveis",
+      "s4_3b2.p1": "Suponha que a solução se fatora como $\\eta(x,t)=\\omega(x)\\,\\gamma(t)$ e substitua na equação de difusão: \\[ \\omega(x)\\,\\gamma'(t) = D\\,\\omega''(x)\\,\\gamma(t). \\]",
+      "s4_3b2.p2": "Dividindo os dois lados por $\\omega(x)\\gamma(t)$ separamos as duas variáveis por completo: \\[ \\frac{\\gamma'(t)}{\\gamma(t)} = D\\,\\frac{\\omega''(x)}{\\omega(x)}. \\]",
 
-      "s4_3c.title": "Uma família de equações diferenciais ordinárias",
-      "s4_3c.p1": "Escrevendo $\\eta(x,t)$ como superposição de modos $\\eta_k(t)e^{ikx}$, a equação de difusão vira, modo a modo: \\[ \\frac{\\partial \\eta_k}{\\partial t} = -Dk^2\\,\\eta_k, \\]",
-      "s4_3c.p2": "com solução imediata $\\eta_k(t)=\\eta_k(0)\\,e^{-Dk^2t}$ — feições afiadas, de $k$ alto, decaem mais rápido, exatamente como uma suavização deveria se comportar.",
+      "s4_3b3.title": "A mesma constante nos dois lados",
+      "s4_3b3.p1": "O lado esquerdo depende só de $t$; o lado direito depende só de $x$. Para a igualdade valer em todo $(x,t)$, os dois lados precisam ser iguais à mesma constante — vamos chamá-la de $-Dk^2$: \\[ \\frac{\\gamma'}{\\gamma} = -Dk^2, \\qquad \\frac{\\omega''}{\\omega} = -k^2. \\]",
+      "s4_3b3.p2": "Duas equações diferenciais ordinárias, uma em $t$ e outra em $x$ — exatamente a simplificação que queríamos tirar da EDP.",
+
+      "s4_3c.title": "Da separação até Fourier",
+      "s4_3c.p1": "Resolvendo cada equação: $\\omega''=-k^2\\omega$ dá $\\omega(x)=e^{ikx}$ — precisamente a condição de autofunção de antes, chegada por outro caminho. E $\\gamma'=-Dk^2\\gamma$ dá $\\gamma(t)=e^{-Dk^2t}$.",
+      "s4_3c.p2": "Isso vale para qualquer $k$, dando uma solução $e^{ikx}e^{-Dk^2t}$ para cada valor de $k$. Como a equação é linear, a solução geral é uma superposição de todas elas: \\[ \\eta(x,t) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta_k(t)\\,e^{ikx}\\,dk, \\qquad \\eta_k(t)=\\eta_k(0)\\,e^{-Dk^2t}. \\]",
+      "s4_3c.p3": "Essa é a representação de Fourier que já vínhamos usando — separação de variáveis aplicada a todo $k$ de uma vez.",
+      "s4_3c.p4": "Fisicamente, $\\gamma(t)=e^{-Dk^2t}$ nos diz que $k$ grande (oscilação espacial rápida) decai mais rápido — exatamente como uma suavização deveria se comportar.",
 
       "s4_3d.title": "Aplicando a condição inicial",
       "s4_3d.p1": "$\\eta_k(0)$ vem de transformar o próprio $\\eta(x,0)$: \\[ \\eta_k(0) = \\frac{1}{\\sqrt{2\\pi}}\\int_{-\\infty}^{+\\infty} \\eta(x,0)\\,e^{-ikx}\\,dx. \\]",
