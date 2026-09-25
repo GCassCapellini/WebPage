@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Difusão em 2D — do argumento de Kac ao Laplaciano</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" id="MathJax-script" async></script>
+
+<style>
+  :root{
+    --paper: #eef1ee;
+    --paper-deep: #e4e9e4;
+    --ink: #172623;
+    --ink-soft: #4c5c56;
+    --teal: #1f6f63;
+    --teal-deep: #123f38;
+    --ochre: #b9793d;
+    --ochre-soft: #e4c9a8;
+    --line: #c6d1c9;
+    --card: #f6f8f5;
+    --maxw: min(760px, 92vw);
+    --maxw-wide: min(920px, 94vw);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    color: var(--teal-deep);
+    margin: 0 0 0.5em 0;
+    letter-spacing: -0.01em;
+  }
+
+  section{
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 1.5rem;
+    position: relative;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .wrap{
+    width: 100%;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  .wrap.wide{ max-width: var(--maxw-wide); }
+
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ochre);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.9rem;
+  }
+
+  p{ margin: 0 0 1.1rem 0; color: var(--ink); }
+  p.muted{ color: var(--ink-soft); }
+
+  .lead{ font-size: 1.15rem; color: var(--ink-soft); max-width: 46ch; }
+
+  /* ---------- HERO ---------- */
+  #hero{
+    background:
+      radial-gradient(circle at 30% 35%, rgba(31,111,99,0.16), transparent 55%),
+      radial-gradient(circle at 72% 62%, rgba(185,121,61,0.14), transparent 50%),
+      var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  #hero .wrap{ text-align:center; }
+  #hero h1{
+    font-size: clamp(2.1rem, 5.4vw, 3.6rem);
+    line-height: 1.08;
+    margin-bottom: 0.6rem;
+  }
+  #hero .sub{
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--ink-soft);
+    max-width: 52ch;
+    margin: 0 auto 2rem auto;
+  }
+  #hero .byline{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--teal);
+  }
+  #hero .drop{
+    width: 84px; height: 84px; margin: 0 auto 1.6rem auto;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, var(--teal) 0%, var(--teal-deep) 70%);
+    box-shadow: 0 0 0 10px rgba(31,111,99,0.08), 0 0 0 22px rgba(31,111,99,0.05);
+  }
+
+  /* ---------- MATH / EQUATION BLOCKS ---------- */
+  .eq{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--teal);
+    border-radius: 6px;
+    padding: 1.1rem 1.3rem;
+    margin: 1.2rem 0;
+    overflow-x: auto;
+  }
+  .eq.result{
+    border-left: 3px solid var(--ochre);
+    background: linear-gradient(135deg, var(--card) 60%, var(--ochre-soft) 220%);
+  }
+  .eq mjx-container{ margin: 0.2em 0 !important; }
+
+  .step-label{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--teal);
+    text-transform: none;
+    margin: 0 0 0.35rem 0;
+  }
+
+  .callout{
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0.9rem 0;
+    margin: 1.4rem 0;
+    font-size: 0.98rem;
+    color: var(--ink-soft);
+  }
+
+  .divider{
+    width: 40px; height: 2px; background: var(--ochre); margin: 1.4rem 0 1.6rem 0; border: none;
+  }
+
+  /* ---------- INTERACTIVE PANELS ---------- */
+  .panel{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.4rem;
+    margin-top: 1.6rem;
+  }
+  .panel h3{ font-size: 1.05rem; margin-bottom: 0.3rem; }
+  .panel .panel-note{ font-size: 0.88rem; color: var(--ink-soft); margin-bottom: 1rem; }
+
+  canvas{
+    width: 100%;
+    display: block;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    touch-action: none;
+  }
+
+  .controls{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    align-items: center;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink-soft);
+  }
+
+  .controls label{ display:flex; align-items:center; gap:0.5rem; }
+
+  button{
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover{ background: var(--teal-deep); }
+  button.secondary{
+    background: transparent;
+    color: var(--teal-deep);
+    border: 1px solid var(--line);
+  }
+  button.secondary:hover{ background: var(--paper-deep); }
+
+  input[type=range]{ accent-color: var(--teal); width: 130px; }
+
+  .stat-row{
+    display:flex; gap: 1.6rem; flex-wrap: wrap;
+    margin-top: 0.9rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .stat{ color: var(--ink-soft); }
+  .stat b{ color: var(--teal-deep); font-size: 1rem; display:block; }
+
+  footer{
+    text-align:center;
+    padding: 3rem 1.5rem 4rem 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 560px){
+    section{ padding: 4rem 1.1rem; }
+    .eq{ padding: 0.9rem 0.9rem; font-size: 0.92rem; }
+  }
+
+  /* ---------- LANGUAGE SWITCHER ---------- */
+  .lang-switcher{
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    display: flex;
+    gap: 0.15rem;
+    padding: 0.2rem;
+    background: rgba(246,248,245,0.92);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 3px 14px rgba(23,38,35,0.08);
+    backdrop-filter: blur(6px);
+  }
+  .lang-switcher button{
+    min-width: 2.7rem;
+    padding: 0.35rem 0.55rem;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+  .lang-switcher button:hover{
+    background: var(--paper-deep);
+    color: var(--teal-deep);
+  }
+  .lang-switcher button.active{
+    background: var(--teal);
+    color: #fff;
+  }
+  @media (max-width: 560px){
+    .lang-switcher{ top: 0.7rem; right: 0.7rem; }
+  }
+
+
+  .lang-en{ display:none; }
+  body.en .lang-pt{ display:none; }
+  body.en .lang-en{ display:inline; }
+
+</style>
+</head>
+<body>
+
+  <div class="lang-switcher" aria-label="Language selector">
+    <button id="langPT" type="button" class="active" aria-label="Português">PT</button>
+    <button id="langEN" type="button" aria-label="English">EN</button>
+  </div>
+
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <div class="wrap">
+    <div class="drop"></div>
+    <div class="eyebrow"><span class="lang lang-pt">Notas de aula · caminhos aleatórios</span><span class="lang lang-en">Lecture notes · random walks</span></div>
+    <h1><span class="lang lang-pt">Difusão em 2D<br>do argumento de Kac ao Laplaciano</span><span class="lang lang-en">2D Diffusion<br>from Kac's argument to the Laplacian</span></h1>
+    <p class="sub"><span class="lang lang-pt">Partindo de um passeio aleatório em quatro direções, generalizando para $n$ ângulos discretos, e tomando o limite contínuo até recuperar $\partial_t \eta = D\nabla^2\eta$.</span><span class="lang lang-en">Starting from a four-direction random walk, generalizing to $n$ discrete angles, and taking the continuous limit until we recover $\partial_t \eta = D\nabla^2\eta$.</span></p>
+    <div class="byline"><span class="lang lang-pt">derivação completa · com experimentos interativos</span><span class="lang lang-en">complete derivation · with interactive experiments</span></div>
+  </div>
+</section>
+
+<!-- ============ 01 — CONTEXTO ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="lang lang-pt">01 — Contexto</span><span class="lang lang-en">01 — Context</span></div>
+    <h2><span class="lang lang-pt">O argumento de Kac</span><span class="lang lang-en">Kac's argument</span></h2>
+    <p class="lead"><span class="lang lang-pt">Mark Kac mostrou que a equação de difusão pode ser obtida sem qualquer física estatística sofisticada — basta um passeio aleatório discreto e uma expansão em série de Taylor.</span><span class="lang lang-en">Mark Kac showed that the diffusion equation can be obtained without any sophisticated statistical physics — all that is needed is a discrete random walk and a Taylor-series expansion.</span></p>
+    <hr class="divider">
+    <p><span class="lang lang-pt">No caso 1D, uma partícula dá um passo de tamanho $l$ para a esquerda ou para a direita a cada intervalo $\tau$. Escrevendo a probabilidade de encontrar a partícula em cada posição como uma relação recursiva e expandindo em Taylor, os termos de primeira ordem se cancelam por simetria e sobra, no limite contínuo, a equação de difusão.</span><span class="lang lang-en">In the 1D case, a particle takes a step of size $l$ to the left or right every interval $\tau$. Writing the probability of finding the particle at each position as a recursive relation and expanding in Taylor series, the first-order terms cancel by symmetry and, in the continuous limit, the diffusion equation remains.</span></p>
+    <p><span class="lang lang-pt">A pergunta natural é: será que esse argumento sobrevive em 2D? E será que o <span class="lang lang-pt">resultado</span><span class="lang lang-en">result</span> depende de termos escolhido apenas quatro direções especiais ($\pm x, \pm y$), ou ele é robusto para qualquer conjunto isotrópico de direções — inclusive um contínuo de ângulos?</span><span class="lang lang-en">The natural question is: does this argument survive in 2D? And does the result depend on choosing only four special directions ($\pm x, \pm y$), or is it robust for any isotropic set of directions — including a continuum of angles?</span></p>
+    <div class="callout"><span class="lang lang-pt">É essa robustez que vamos testar nas próximas seções: primeiro em uma rede quadrada, depois em $n$ ângulos discretos, e por fim no limite $n\to\infty$.</span><span class="lang lang-en">This is the robustness we will test in the following sections: first on a square lattice, then with $n$ discrete angles, and finally in the limit $n\to\infty$.</span></div>
+  </div>
+</section>
+
+<!-- ============ 02 — REDE QUADRADA ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="lang lang-pt">02 — Rede quadrada</span><span class="lang lang-en">02 — Square lattice</span></div>
+    <h2><span class="lang lang-pt">Passo em quatro direções</span><span class="lang lang-en">Four-direction step</span></h2>
+    <p><span class="lang lang-pt">Uma partícula dá um passo de tamanho $l$ em uma das quatro direções $\pm x, \pm y$ a cada intervalo $\tau$. Sejam $p,q,k,j$ as probabilidades de passo em $+x,-x,+y,-y$, com $p+q+k+j=1$, e $n_1,n_2,n_3,n_4$ o número de <span class="lang lang-pt">passos</span><span class="lang lang-en">steps</span> em cada direção após $N$ passos totais.</span><span class="lang lang-en">A particle takes a step of size $l$ in one of the four directions $\pm x, \pm y$ every interval $\tau$. Let $p,q,k,j$ be the step probabilities for $+x,-x,+y,-y$, with $p+q+k+j=1$, and let $n_1,n_2,n_3,n_4$ be the number of steps in each direction after $N$ total steps.</span></p>
+    <p><span class="lang lang-pt">A posição é $\mathbf r = l(m_1,m_2)$, com $m_1=n_1-n_2$ e $m_2=n_3-n_4$. A probabilidade de uma dada sequência de passos é a distribuição multinomial:</span><span class="lang lang-en">The position is $\mathbf r = l(m_1,m_2)$, with $m_1=n_1-n_2$ and $m_2=n_3-n_4$. The probability of a given sequence of steps is the multinomial distribution:</span></p>
+    <div class="eq">
+      $$P_N(n_1,n_2,n_3,n_4) = \frac{N!}{n_1!\,n_2!\,n_3!\,n_4!}\,p^{n_1}q^{n_2}k^{n_3}j^{n_4}$$
+    </div>
+    <p class="muted"><span class="lang lang-pt">Somada sobre todas as sequências possíveis, essa distribuição é igual a $1$.</span><span class="lang lang-en">Summed over all possible sequences, this distribution equals $1$.</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">02 — Rede quadrada</div>
+    <h2><span class="lang lang-pt">A relação recursiva</span><span class="lang lang-en">The recursive relation</span></h2>
+    <p><span class="lang lang-pt">Se a partícula está em $(m_1,m_2)$ no passo $N+1$, no passo anterior ela estava em $(m_1\mp1,m_2)$ ou $(m_1,m_2\mp1)$ — um passo de distância, em uma das quatro direções. Logo:</span><span class="lang lang-en">If the particle is at $(m_1,m_2)$ at step $N+1$, then at the previous step it was at $(m_1\mp1,m_2)$ or $(m_1,m_2\mp1)$ — one step away, in one of the four directions. Therefore:</span></p>
+    <div class="eq">
+      <div class="step-label"><span class="lang lang-pt">recursão</span><span class="lang lang-en">recursion</span></div>
+      $$P_{N+1}(m_1,m_2) = p\,P_N(m_1{-}1,m_2) + q\,P_N(m_1{+}1,m_2) + k\,P_N(m_1,m_2{-}1) + j\,P_N(m_1,m_2{+}1)$$
+    </div>
+    <p><span class="lang lang-pt">Escrevendo $P_N(m_1,m_2)=\eta(t,\mathbf r)$ e $P_{N+1}(m_1,m_2)=\eta(t+\tau,\mathbf r)$, o problema se torna uma equação para a função de distribuição $\eta$ — e podemos atacá-la com Taylor.</span><span class="lang lang-en">Writing $P_N(m_1,m_2)=\eta(t,\mathbf r)$ and $P_{N+1}(m_1,m_2)=\eta(t+\tau,\mathbf r)$, the problem becomes an equation for the distribution function $\eta$ — and we can tackle it with Taylor expansion.</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">02 — Rede quadrada</div>
+    <h2><span class="lang lang-pt">Duas expansões de Taylor</span><span class="lang lang-en">Two Taylor expansions</span></h2>
+    <p><span class="lang lang-pt">À esquerda, expandimos em $\tau$ (pequeno), mantendo $\mathbf r$ fixo, até segunda ordem:</span><span class="lang lang-en">On the left, we expand in $\tau$ (small), keeping $\mathbf r$ fixed, up to second order:</span></p>
+    <div class="eq">
+      $$\eta(t+\tau,\mathbf r) = \eta + \tau\,\partial_t\eta + \frac{\tau^2}{2}\partial_t^2\eta + \mathcal{O}(\tau^3)$$
+    </div>
+    <p><span class="lang lang-pt">À direita, cada termo é expandido em $l$ (também pequeno). Por exemplo:</span><span class="lang lang-en">On the right, each term is expanded in $l$ (also small). For example:</span></p>
+    <div class="eq">
+      $$P_N(m_1{-}1,m_2) = \eta - l\,\partial_x\eta + \frac{l^2}{2}\partial_x^2\eta + \mathcal{O}(l^3)$$
+    </div>
+    <p class="muted"><span class="lang lang-pt">O mesmo vale, com os sinais e eixos correspondentes, para os outros três termos ($m_1{+}1$, $m_2{-}1$, $m_2{+}1$).</span><span class="lang lang-en">The same applies, with the corresponding signs and axes, to the other three terms ($m_1{+}1$, $m_2{-}1$, $m_2{+}1$).</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">02 — Rede quadrada</div>
+    <h2><span class="lang lang-pt">Somando os quatro termos</span><span class="lang lang-en">Adding the four terms</span></h2>
+    <p><span class="lang lang-pt">Substituindo as quatro expansões na recursão e agrupando por ordem:</span><span class="lang lang-en">Substituting the four expansions into the recursion and grouping by order:</span></p>
+    <div class="eq">
+      $$\eta\,(p{+}q{+}k{+}j) + l\,\partial_x\eta\,(q{-}p) + l\,\partial_y\eta\,(j{-}k) + \frac{l^2}{2}\partial_x^2\eta\,(p{+}q) + \frac{l^2}{2}\partial_y^2\eta\,(k{+}j)$$
+    </div>
+    <p><span class="lang lang-pt">No caso <b>isotrópico</b>, $p=q=k=j=\tfrac14$: os termos de primeira ordem se cancelam ($q-p=j-k=0$), $p+q+k+j=1$ e $p+q=k+j=\tfrac12$. Sobra:</span><span class="lang lang-en">In the <b>isotropic</b> case, $p=q=k=j=\tfrac14$: the first-order terms cancel ($q-p=j-k=0$), $p+q+k+j=1$, and $p+q=k+j=\tfrac12$. This leaves:</span></p>
+    <div class="eq">
+      $$\eta + \frac{l^2}{4}\left(\partial_x^2\eta+\partial_y^2\eta\right)$$
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">02 — Rede quadrada</div>
+    <h2><span class="lang lang-pt">A equação de difusão</span><span class="lang lang-en">The diffusion equation</span></h2>
+    <p><span class="lang lang-pt">Igualando os dois lados e dividindo por $\tau$:</span><span class="lang lang-en">Equating both sides and dividing by $\tau$:</span></p>
+    <div class="eq">
+      $$\partial_t\eta + \frac{\tau}{2}\partial_t^2\eta = \frac{l^2}{4\tau}\nabla^2\eta$$
+    </div>
+    <p><span class="lang lang-pt">No limite difusivo, em que $\tau\,\partial_t^2\eta \ll \partial_t\eta$ (equivalente a $\tau\to0,\,l\to0$ com $l^2/\tau$ fixo):</span><span class="lang lang-en">In the diffusive limit, where $\tau\,\partial_t^2\eta \ll \partial_t\eta$ (equivalently $\tau\to0,\,l\to0$ with $l^2/\tau$ fixed):</span></p>
+    <div class="eq result">
+      <div class="step-label">resultado</div>
+      $$\partial_t \eta = D\nabla^2\eta, \qquad D = \frac{l^2}{4\tau}$$
+    </div>
+    <p class="muted"><span class="lang lang-pt">Em $d$ dimensões, com $2d$ direções igualmente prováveis, o mesmo argumento dá $D = \dfrac{l^2}{2d\,\tau}$.</span><span class="lang lang-en">In $d$ dimensions, with $2d$ equally probable directions, the same argument gives $D = \dfrac{l^2}{2d\,\tau}$.</span></p>
+
+    <div class="panel">
+      <h3><span class="lang lang-pt">Experimento — passeio aleatório em rede 2D</span><span class="lang lang-en">Experiment — 2D lattice random walk</span></h3>
+      <p class="panel-note"><span class="lang lang-pt">$N$ partículas partem do centro e dão passos de tamanho $l$ em $\pm x$ ou $\pm y$ a cada tick. Compare o espalhamento medido, $\langle r^2\rangle$, com a previsão $\langle r^2\rangle = (l^2/\tau)\,t$.</span><span class="lang lang-en">$N$ particles start at the center and take steps of size $l$ in $\pm x$ or $\pm y$ at each tick. Compare the measured spread, $\langle r^2\rangle$, with the prediction $\langle r^2\rangle = (l^2/\tau)\,t$.</span></p>
+      <canvas id="latticeCanvas" height="360"></canvas>
+      <div class="controls">
+        <button id="latticePlay"><span class="lang lang-pt">▶ Rodar</span><span class="lang lang-en">▶ Run</span></button>
+        <button class="secondary" id="latticeReset"><span class="lang lang-pt">Reiniciar</span><span class="lang lang-en">Reset</span></button>
+        <label><span class="lang lang-pt">Partículas</span><span class="lang lang-en">Particles</span> <input type="range" id="latticeN" min="20" max="400" value="150"></label>
+        <label><span class="lang lang-pt">Velocidade</span><span class="lang lang-en">Speed</span> <input type="range" id="latticeSpeed" min="1" max="8" value="3"></label>
+      </div>
+      <div class="stat-row">
+        <div class="stat">passos <b id="latticeT">0</b></div>
+        <div class="stat"><span class="lang lang-pt">⟨r²⟩ medido</span><span class="lang lang-en">measured ⟨r²⟩</span> <b id="latticeMSD">0</b></div>
+        <div class="stat"><span class="lang lang-pt">previsão (l²/τ)·t</span><span class="lang lang-en">prediction (l²/τ)·t</span> <b id="latticePred">0</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 — N ÂNGULOS ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="lang lang-pt">03 — n ângulos discretos</span><span class="lang lang-en">03 — n discrete angles</span></div>
+    <h2><span class="lang lang-pt">E se as direções não forem só quatro?</span><span class="lang lang-en">What if the directions are not just four?</span></h2>
+    <p class="lead"><span class="lang lang-pt">A escolha de $\pm x,\pm y$ foi conveniente, mas arbitrária. Vamos generalizar para $n$ direções discretas $\theta_i$ espalhadas ao redor de $\mathbf r$, cada uma com probabilidade $p_i$, $\sum_i p_i = 1$.</span><span class="lang lang-en">The choice of $\pm x,\pm y$ was convenient, but arbitrary. We will generalize to $n$ discrete directions $\theta_i$ distributed around $\mathbf r$, each with probability $p_i$, $\sum_i p_i = 1$.</span></p>
+    <hr class="divider">
+    <p><span class="lang lang-pt">Assumimos que os ângulos vêm dois a dois <b>conjugados</b> (antipodais): para cada $\theta_i$ existe $\theta_i+\pi$ no conjunto, com $p_i = p_{i+\pi}$ — a versão 2D de "a probabilidade de ir para a esquerda é comparável à de ir para a direita".</span><span class="lang lang-en">We assume that the angles come in <b>conjugate</b> (antipodal) pairs: for each $\theta_i$ there is $\theta_i+\pi$ in the set, with $p_i = p_{i+\pi}$ — the 2D version of "the probability of going left is comparable to that of going right".</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">03 — n ângulos discretos</div>
+    <h2><span class="lang lang-pt">A recursão vetorial</span><span class="lang lang-en">The vector recursion</span></h2>
+    <p><span class="lang lang-pt">Para a partícula alcançar $\mathbf r$ no passo $N+1$, no passo anterior ela estava a uma distância $l$ de $\mathbf r$, ao longo de alguma direção $\theta_i$. Definindo $\mathbf l_i = l(\cos\theta_i,\sin\theta_i)$:</span><span class="lang lang-en">For the particle to reach $\mathbf r$ at step $N+1$, at the previous step it was a distance $l$ from $\mathbf r$, along some direction $\theta_i$. Defining $\mathbf l_i = l(\cos\theta_i,\sin\theta_i)$:</span></p>
+    <div class="eq">
+      <div class="step-label">recursão</div>
+      $$P_{N+1}(\mathbf r) = \sum_{i=1}^{n} p_i\, P_N\big(\mathbf r - \mathbf l_i\big)$$
+    </div>
+    <p class="muted"><span class="lang lang-pt">Note a semelhança estrutural com o caso da rede quadrada: lá, chegar em $m_1$ vindo de $+x$ exigia ter partido de $m_1-1$. Aqui é o mesmo raciocínio, só que com um vetor $\mathbf l_i$ genérico no lugar de um passo de eixo.</span><span class="lang lang-en">Note the structural similarity with the square-lattice case: there, reaching $m_1$ from $+x$ required starting from $m_1-1$. Here the reasoning is the same, but with a generic vector $\mathbf l_i$ instead of an axis-aligned step.</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">03 — n ângulos discretos</div>
+    <h2><span class="lang lang-pt">Taylor até segunda ordem, em duas dimensões</span><span class="lang lang-en">Taylor expansion to second order, in two dimensions</span></h2>
+    <p><span class="lang lang-pt">Escrevendo $\eta(t,\mathbf r)=P_N(\mathbf r)$, expandimos cada termo da soma:</span><span class="lang lang-en">Writing $\eta(t,\mathbf r)=P_N(\mathbf r)$, we expand each term in the sum:</span></p>
+    <div class="eq">
+      $$\eta(t,\mathbf r - \mathbf l_i) = \eta(t,\mathbf r) - \mathbf l_i\cdot\nabla\eta + \frac{1}{2}(\mathbf l_i\cdot\nabla)^2\eta + \mathcal{O}(l^3)$$
+    </div>
+    <p><span class="lang lang-pt">O operador $(\mathbf l_i\cdot\nabla)^2$ não é $|\mathbf l_i|^2\nabla^2$ — é o quadrado de um produto de binômios, e por isso carrega um termo cruzado:</span><span class="lang lang-en">The operator $(\mathbf l_i\cdot\nabla)^2$ is not $|\mathbf l_i|^2\nabla^2$ — it is the square of a binomial product, and therefore carries a cross term:</span></p>
+    <div class="eq">
+      $$(\mathbf l_i\cdot\nabla)^2 = l^2\big(\cos\theta_i\,\partial_x+\sin\theta_i\,\partial_y\big)^2 = l^2\Big[\cos^2\theta_i\,\partial_x^2 + 2\cos\theta_i\sin\theta_i\,\partial_x\partial_y + \sin^2\theta_i\,\partial_y^2\Big]$$
+    </div>
+    <p class="muted"><span class="lang lang-pt">Para um único ângulo $\theta_i$ esse termo cruzado não é nulo em geral — em $\theta_i=\pi/4$, por exemplo, $\cos\theta_i\sin\theta_i = \tfrac12$.</span><span class="lang lang-en">For a single angle $\theta_i$, this cross term is generally nonzero — for $\theta_i=\pi/4$, for example, $\cos\theta_i\sin\theta_i = \tfrac12$.</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">03 — n ângulos discretos</div>
+    <h2><span class="lang lang-pt">Cancelando a primeira ordem</span><span class="lang lang-en">Canceling the first order</span></h2>
+    <p><span class="lang lang-pt">Substituindo as expansões na recursão e usando $\sum_i p_i=1$, o termo $\eta(t,\mathbf r)$ se cancela dos dois lados. O termo de primeira ordem,</span><span class="lang lang-en">Substituting the expansions into the recursion and using $\sum_i p_i=1$, the term $\eta(t,\mathbf r)$ cancels on both sides. The first-order term,</span></p>
+    <div class="eq">$$\sum_{i=1}^n p_i\,\mathbf l_i\cdot\nabla\eta$$</div>
+    <p><span class="lang lang-pt">se anula pelo pareamento antipodal: como $\cos(\theta_i+\pi)=-\cos\theta_i$ e $\sin(\theta_i+\pi)=-\sin\theta_i$, cada par $(\theta_i,\theta_i+\pi)$ contribui com termos exatamente opostos. Resta:</span><span class="lang lang-en">vanishes by antipodal pairing: since $\cos(\theta_i+\pi)=-\cos\theta_i$ and $\sin(\theta_i+\pi)=-\sin\theta_i$, each pair $(\theta_i,\theta_i+\pi)$ contributes exactly opposite terms. We are left with:</span></p>
+    <div class="eq">
+      $$\tau\,\partial_t\eta + \frac{\tau^2}{2}\partial_t^2\eta = \sum_{i=1}^n \frac{p_i}{2}\,(\mathbf l_i\cdot\nabla)^2\eta$$
+    </div>
+    <div class="callout"><span class="lang lang-pt">O pareamento antipodal basta para eliminar a primeira ordem — mas <b>não</b> elimina o termo cruzado de segunda ordem, porque $\cos\theta\sin\theta$ tem período $\pi$, não $2\pi$: um par antipodal duplica essa contribuição, não a cancela. Isso só se resolve na próxima seção.</span><span class="lang lang-en">Antipodal pairing is enough to eliminate the first order — but it does <b>not</b> eliminate the second-order cross term, because $\cos\theta\sin\theta$ has period $\pi$, not $2\pi$: an antipodal pair doubles this contribution rather than canceling it. This is resolved in the next section.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">03 — n ângulos discretos</div>
+    <h2><span class="lang lang-pt">Caso isotrópico</span><span class="lang lang-en">Isotropic case</span></h2>
+    <p><span class="lang lang-pt">Tomando $p_i = 1/n$ para todo $i$ e expandindo o operador:</span><span class="lang lang-en">Taking $p_i = 1/n$ for every $i$ and expanding the operator:</span></p>
+    <div class="eq result">
+      <div class="step-label"><span class="lang lang-pt">antes do limite contínuo</span><span class="lang lang-en">before the continuous limit</span></div>
+      $$\tau\,\partial_t\eta + \frac{\tau^2}{2}\partial_t^2\eta = \frac{l^2}{2n}\sum_{i=1}^n \Big[\cos^2\theta_i\,\partial_x^2\eta + 2\cos\theta_i\sin\theta_i\,\partial_x\partial_y\eta + \sin^2\theta_i\,\partial_y^2\eta\Big]$$
+    </div>
+    <p class="muted"><span class="lang lang-pt">Essa soma ainda depende de como os $n$ ângulos estão distribuídos. O próximo passo é tomá-los igualmente espaçados e levar $n\to\infty$.</span><span class="lang lang-en">This sum still depends on how the $n$ angles are distributed. The next step is to make them equally spaced and take $n\to\infty$.</span></p>
+
+    <div class="panel">
+      <h3><span class="lang lang-pt">Experimento — de 4 direções a um círculo</span><span class="lang lang-en">Experiment — from 4 directions to a circle</span></h3>
+      <p class="panel-note"><span class="lang lang-pt">Arraste para mudar $n$: as $n$ direções igualmente espaçadas em torno de $\mathbf r$, cada uma recebendo peso $p_i=1/n$. Observe como o padrão de setas vai preenchendo o círculo.</span><span class="lang lang-en">Drag to change $n$: the $n$ equally spaced directions around $\mathbf r$, each with weight $p_i=1/n$. Observe how the arrow pattern fills the circle.</span></p>
+      <canvas id="angleCanvas" height="360"></canvas>
+      <div class="controls">
+        <label>n = <span id="angleNVal">4</span> <input type="range" id="angleN" min="3" max="48" value="4"></label>
+        <button class="secondary" id="angleWalkToggle"><span class="lang lang-pt">Mostrar caminhada aleatória</span><span class="lang lang-en">Show random walk</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 — LIMITE CONTÍNUO ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="lang lang-pt">04 — Limite contínuo</span><span class="lang lang-en">04 — Continuous limit</span></div>
+    <h2><span class="lang lang-pt">Soma vira integral</span><span class="lang lang-en">Sum becomes an integral</span></h2>
+    <p><span class="lang lang-pt">Espaçando os $n$ ângulos uniformemente, $\Delta\theta = 2\pi/n$, e levando $n\to\infty$, a soma sobre $i$ se torna uma integral em $\theta$:</span><span class="lang lang-en">Spacing the $n$ angles uniformly, $\Delta\theta = 2\pi/n$, and taking $n\to\infty$, the sum over $i$ becomes an integral over $\theta$:</span></p>
+    <div class="eq">
+      $$\sum_{i=1}^n f(\theta_i) \;\xrightarrow{n\to\infty}\; \frac{n}{2\pi}\int_0^{2\pi} f(\theta)\,d\theta$$
+    </div>
+    <p><span class="lang lang-pt">Aplicando isso à equação da seção anterior:</span><span class="lang lang-en">Applying this to the equation from the previous section:</span></p>
+    <div class="eq">
+      $$\tau\,\partial_t\eta + \frac{\tau^2}{2}\partial_t^2\eta = \frac{l^2}{4\pi}\int_0^{2\pi}\Big[\cos^2\theta\,\partial_x^2\eta + 2\cos\theta\sin\theta\,\partial_x\partial_y\eta + \sin^2\theta\,\partial_y^2\eta\Big]d\theta$$
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">04 — Limite contínuo</div>
+    <h2><span class="lang lang-pt">As três integrais angulares</span><span class="lang lang-en">The three angular integrals</span></h2>
+    <p><span class="lang lang-pt">São integrais elementares sobre um período completo do círculo:</span><span class="lang lang-en">These are elementary integrals over one complete period of the circle:</span></p>
+    <div class="eq">
+      $$\int_0^{2\pi}\cos^2\theta\,d\theta = \pi, \qquad \int_0^{2\pi}\sin^2\theta\,d\theta = \pi, \qquad \int_0^{2\pi}\cos\theta\sin\theta\,d\theta = 0$$
+    </div>
+    <p><span class="lang lang-pt">Agora sim o termo cruzado desaparece — não por antipodalidade, mas porque a integração cobre <i>todo</i> o círculo, e $\cos\theta\sin\theta = \tfrac12\sin2\theta$ tem média nula sobre um período completo. Os termos $\partial_x^2\eta$ e $\partial_y^2\eta$, por outro lado, recebem exatamente o mesmo peso $\pi$ — a marca da isotropia completa.</span><span class="lang lang-en">Now the cross term disappears — not because of antipodal symmetry, but because the integration covers the <i>entire</i> circle, and $\cos\theta\sin\theta = \tfrac12\sin2\theta$ has zero average over a complete period. The terms $\partial_x^2\eta$ and $\partial_y^2\eta$, on the other hand, receive exactly the same weight $\pi$ — the signature of complete isotropy.</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">04 — Limite contínuo</div>
+    <h2><span class="lang lang-pt">De volta ao Laplaciano</span><span class="lang lang-en">Back to the Laplacian</span></h2>
+    <p><span class="lang lang-pt">Substituindo as três integrais:</span><span class="lang lang-en">Substituting the three integrals:</span></p>
+    <div class="eq">
+      $$\tau\,\partial_t\eta + \frac{\tau^2}{2}\partial_t^2\eta = \frac{l^2}{4\pi}\,\pi\,\big(\partial_x^2\eta+\partial_y^2\eta\big) = \frac{l^2}{4}\nabla^2\eta$$
+    </div>
+    <p><span class="lang lang-pt">Dividindo por $\tau$:</span><span class="lang lang-en">Dividing by $\tau$:</span></p>
+    <div class="eq">
+      $$\partial_t\eta + \frac{\tau}{2}\partial_t^2\eta = \frac{l^2}{4\tau}\nabla^2\eta$$
+    </div>
+    <p><span class="lang lang-pt">e, no limite difusivo $\tau\,\partial_t^2\eta \ll \partial_t\eta$:</span><span class="lang lang-en">and, in the diffusive limit $\tau\,\partial_t^2\eta \ll \partial_t\eta$:</span></p>
+    <div class="eq result">
+      <div class="step-label"><span class="lang lang-pt">mesmo resultado de antes</span><span class="lang lang-en">same result as before</span></div>
+      $$\partial_t \eta = D\nabla^2\eta, \qquad D = \frac{l^2}{4\tau}$$
+    </div>
+    <p class="muted"><span class="lang lang-pt"><b>Exatamente</b> o mesmo coeficiente de difusão obtido com quatro direções discretas. O resultado macroscópico não depende dos detalhes microscópicos do passeio — 4 direções, $n$ direções, ou um contínuo de ângulos — desde que o processo seja isotrópico. É essa robustez que dá ao argumento de Kac seu valor: a equação de difusão emerge de qualquer passeio aleatório suficientemente simétrico, não de uma escolha particular de rede.</span><span class="lang lang-en"><b>Exactly</b> the same diffusion coefficient obtained with four discrete directions. The macroscopic result does not depend on the microscopic details of the walk — 4 directions, $n$ directions, or a continuum of angles — as long as the process is isotropic. This robustness is what gives Kac's argument its value: the diffusion equation emerges from any sufficiently symmetric random walk, not from a particular lattice choice.</span></p>
+  </div>
+</section>
+
+<!-- ============ 05 — PARA REFLETIR ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="lang lang-pt">05 — Para refletir</span><span class="lang lang-en">05 — To reflect on</span></div>
+    <h2><span class="lang lang-pt">$D \sim 1/d$: a partícula "tem mais dificuldade" em dimensões altas?</span><span class="lang lang-en">$D \sim 1/d$: does the particle "have a harder time" diffusing in higher dimensions?</span></h2>
+    <p><span class="lang lang-pt">A generalização para $d$ dimensões deu $D = l^2/(2d\tau)$ — o coeficiente de difusão cai com a dimensão. É tentador concluir que dimensões maiores dificultam a difusão. Mas olhe o deslocamento quadrático médio total, usando a relação geral $\langle r^2\rangle = 2dDt$:</span><span class="lang lang-en">The generalization to $d$ dimensions gave $D = l^2/(2d\tau)$ — the diffusion coefficient decreases with dimension. It is tempting to conclude that higher dimensions make diffusion harder. But consider the total mean-square displacement, using the general relation $\langle r^2\rangle = 2dDt$:</span></p>
+    <div class="eq">
+      $$\langle r^2\rangle = 2d\cdot\frac{l^2}{2d\tau}\cdot t = \frac{l^2}{\tau}\,t$$
+    </div>
+    <p><span class="lang lang-pt">O fator $d$ <b>cancela exatamente</b>. O espalhamento total não muda com a dimensão — o que muda é que o mesmo passo de comprimento $l$ fica repartido entre mais eixos, então cada eixo individual recebe uma fatia menor. $D$ cai porque mede difusão <i>por eixo</i>, enquanto o número de eixos cresce.</span><span class="lang lang-en">The factor $d$ <b>cancels exactly</b>. The total spreading does not change with dimension — what changes is that the same step length $l$ is distributed among more axes, so each individual axis receives a smaller share. $D$ decreases because it measures diffusion <i>per axis</i>, while the number of axes increases.</span></p>
+    <div class="callout"><span class="lang lang-pt">Não é uma dificuldade física crescente — é uma questão de contabilidade: como um efeito de tamanho fixo se distribui entre mais componentes.</span><span class="lang lang-en">It is not an increasing physical difficulty — it is a matter of bookkeeping: how a fixed-size effect is distributed among more components.</span></div>
+  </div>
+</section>
+
+<!-- ============ CONCLUSÃO ============ -->
+<section id="conclusao">
+  <div class="wrap">
+    <div class="eyebrow"><span class="lang lang-pt">Conclusão</span><span class="lang lang-en">Conclusion</span></div>
+    <h2><span class="lang lang-pt">Uma equação, vários caminhos até ela</span><span class="lang lang-en">One equation, several paths to it</span></h2>
+    <p><span class="lang lang-pt">Partimos de um passeio aleatório em quatro direções fixas e chegamos a $\partial_t\eta = D\nabla^2\eta$. Generalizamos para $n$ ângulos discretos — vimos que o pareamento antipodal cancela a primeira ordem, mas só a integração completa sobre o círculo cancela o termo cruzado de segunda ordem. No limite contínuo, recuperamos exatamente o mesmo $D=l^2/4\tau$.</span><span class="lang lang-en">We started from a random walk in four fixed directions and arrived at $\partial_t\eta = D\nabla^2\eta$. We generalized to $n$ discrete angles — we saw that antipodal pairing cancels the first order, but only the complete integration over the circle cancels the second-order cross term. In the continuous limit, we recover exactly the same $D=l^2/4\tau$.</span></p>
+    <p class="muted"><span class="lang lang-pt">A equação de difusão não é uma peculiaridade da rede quadrada — é o que resta de qualquer passeio aleatório isotrópico, uma vez que os detalhes microscópicos são apagados pela média.</span><span class="lang lang-en">The diffusion equation is not a peculiarity of the square lattice — it is what remains of any isotropic random walk once the microscopic details are washed out by averaging.</span></p>
+  </div>
+</section>
+
+<footer><span class="lang lang-pt">argumento de Kac · derivação 2D · rede quadrada → n ângulos → limite contínuo</span><span class="lang lang-en">Kac's argument · 2D derivation · square lattice → n angles → continuous limit</span></footer>
+
+<script>
+/* =========================================================
+   SIM 1 — Passeio aleatório 2D em rede (±x, ±y)
+   ========================================================= */
+(function(){
+  const canvas = document.getElementById('latticeCanvas');
+  const ctx = canvas.getContext('2d');
+  const playBtn = document.getElementById('latticePlay');
+  const resetBtn = document.getElementById('latticeReset');
+  const nSlider = document.getElementById('latticeN');
+  const speedSlider = document.getElementById('latticeSpeed');
+  const tLabel = document.getElementById('latticeT');
+  const msdLabel = document.getElementById('latticeMSD');
+  const predLabel = document.getElementById('latticePred');
+
+  const L_STEP = 6;   // "l" in px
+  const TAU = 1;      // one tick = one tau
+
+  let particles = [];
+  let t = 0;
+  let running = false;
+  let rafId = null;
+
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 360;
+  }
+
+  function initParticles(){
+    const n = parseInt(nSlider.value);
+    particles = [];
+    for(let i=0;i<n;i++){
+      particles.push({x:0, y:0});
+    }
+    t = 0;
+    updateStats();
+  }
+
+  function step(){
+    const speed = parseInt(speedSlider.value);
+    for(let s=0;s<speed;s++){
+      for(const p of particles){
+        const dir = Math.floor(Math.random()*4);
+        if(dir===0) p.x += L_STEP;
+        else if(dir===1) p.x -= L_STEP;
+        else if(dir===2) p.y += L_STEP;
+        else p.y -= L_STEP;
+      }
+      t += TAU;
+    }
+    updateStats();
+  }
+
+  function updateStats(){
+    let sumR2 = 0;
+    for(const p of particles){ sumR2 += p.x*p.x + p.y*p.y; }
+    const msd = particles.length ? sumR2/particles.length : 0;
+    const pred = (L_STEP*L_STEP/TAU) * t;
+    tLabel.textContent = t;
+    msdLabel.textContent = msd.toFixed(0);
+    predLabel.textContent = pred.toFixed(0);
+  }
+
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.save();
+    ctx.translate(w/2, h/2);
+
+    // faint grid
+    ctx.strokeStyle = '#eef1ee';
+    ctx.lineWidth = 1;
+    for(let gx=-w/2; gx<w/2; gx+=L_STEP*6){
+      ctx.beginPath(); ctx.moveTo(gx,-h/2); ctx.lineTo(gx,h/2); ctx.stroke();
+    }
+    for(let gy=-h/2; gy<h/2; gy+=L_STEP*6){
+      ctx.beginPath(); ctx.moveTo(-w/2,gy); ctx.lineTo(w/2,gy); ctx.stroke();
+    }
+
+    // origin
+    ctx.fillStyle = '#b9793d';
+    ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+
+    // particles
+    ctx.fillStyle = 'rgba(31,111,99,0.55)';
+    for(const p of particles){
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function loop(){
+    step();
+    draw();
+    if(running) rafId = setTimeout(loop, 40);
+  }
+
+  playBtn.addEventListener('click', ()=>{
+    running = !running;
+    playBtn.textContent = running ? (document.body.classList.contains('en') ? '⏸ Pause' : '⏸ Pausar') : (document.body.classList.contains('en') ? '▶ Run' : '▶ Rodar');
+    if(running) loop();
+    else clearTimeout(rafId);
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    running = false;
+    clearTimeout(rafId);
+    playBtn.textContent = document.body.classList.contains('en') ? '▶ Run' : '▶ Rodar';
+    initParticles();
+    draw();
+  });
+
+  nSlider.addEventListener('input', ()=>{
+    initParticles();
+    draw();
+  });
+
+  window.addEventListener('resize', ()=>{ resize(); draw(); });
+
+  resize();
+  initParticles();
+  draw();
+})();
+
+/* =========================================================
+   SIM 2 — n ângulos igualmente espaçados em torno de r
+   ========================================================= */
+(function(){
+  const canvas = document.getElementById('angleCanvas');
+  const ctx = canvas.getContext('2d');
+  const nSlider = document.getElementById('angleN');
+  const nVal = document.getElementById('angleNVal');
+  const walkToggle = document.getElementById('angleWalkToggle');
+
+  let showWalk = false;
+  let walkPos = {x:0,y:0};
+  let walkTrail = [];
+  let walkTimer = null;
+
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 360;
+  }
+
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    const cx = w/2, cy = h/2;
+    const R = Math.min(w,h)*0.34;
+
+    const n = parseInt(nSlider.value);
+    nVal.textContent = n;
+
+    // reference circle
+    ctx.strokeStyle = '#c6d1c9';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI*2);
+    ctx.stroke();
+
+    // walk trail (drawn first, underneath arrows)
+    if(showWalk && walkTrail.length>1){
+      ctx.strokeStyle = 'rgba(185,121,61,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx+walkTrail[0].x, cy+walkTrail[0].y);
+      for(let i=1;i<walkTrail.length;i++){
+        ctx.lineTo(cx+walkTrail[i].x, cy+walkTrail[i].y);
+      }
+      ctx.stroke();
+      ctx.fillStyle = '#b9793d';
+      const last = walkTrail[walkTrail.length-1];
+      ctx.beginPath();
+      ctx.arc(cx+last.x, cy+last.y, 4, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // n equally spaced arrows
+    ctx.strokeStyle = '#1f6f63';
+    ctx.fillStyle = '#1f6f63';
+    ctx.lineWidth = 1.8;
+    for(let i=0;i<n;i++){
+      const theta = (2*Math.PI*i)/n;
+      const ex = cx + R*Math.cos(theta);
+      const ey = cy + R*Math.sin(theta);
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.lineTo(ex,ey);
+      ctx.stroke();
+      // arrowhead
+      const ah = 6;
+      const a1 = theta + Math.PI*0.85;
+      const a2 = theta - Math.PI*0.85;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex + ah*Math.cos(a1), ey + ah*Math.sin(a1));
+      ctx.lineTo(ex + ah*Math.cos(a2), ey + ah*Math.sin(a2));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // center point r
+    ctx.fillStyle = '#172623';
+    ctx.beginPath();
+    ctx.arc(cx,cy,4,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function walkStep(){
+    const n = parseInt(nSlider.value);
+    const i = Math.floor(Math.random()*n);
+    const theta = (2*Math.PI*i)/n;
+    const L = 9;
+    walkPos.x += L*Math.cos(theta);
+    walkPos.y += L*Math.sin(theta);
+    walkTrail.push({x:walkPos.x, y:walkPos.y});
+    if(walkTrail.length > 400) walkTrail.shift();
+    draw();
+  }
+
+  walkToggle.addEventListener('click', ()=>{
+    showWalk = !showWalk;
+    walkToggle.textContent = showWalk ? '<span class="lang lang-pt">Ocultar caminhada aleatória</span><span class="lang lang-en">Hide random walk</span>' : 'Mostrar caminhada aleatória';
+    if(showWalk){
+      walkPos = {x:0,y:0};
+      walkTrail = [{x:0,y:0}];
+      walkTimer = setInterval(walkStep, 90);
+    } else {
+      clearInterval(walkTimer);
+      draw();
+    }
+  });
+
+  nSlider.addEventListener('input', ()=>{
+    walkPos = {x:0,y:0};
+    walkTrail = [{x:0,y:0}];
+    draw();
+  });
+
+  window.addEventListener('resize', ()=>{ resize(); draw(); });
+
+  resize();
+  draw();
+})();
+</script>
+
+
+<script>
+(function(){
+  const ptBtn = document.getElementById('langPT');
+  const enBtn = document.getElementById('langEN');
+
+  function setLanguage(lang){
+    const english = lang === 'en';
+    document.documentElement.lang = english ? 'en' : 'pt-BR';
+    document.body.classList.toggle('en', english);
+    ptBtn.classList.toggle('active', !english);
+    enBtn.classList.toggle('active', english);
+    localStorage.setItem('difusao-language', lang);
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    const play = document.getElementById('latticePlay');
+    const walk = document.getElementById('angleWalkToggle');
+    if(play) play.textContent = document.body.classList.contains('en') ? (play.textContent.includes('Pause') || play.textContent.includes('Pausar') && !play.textContent.includes('Run') ? '⏸ Pause' : '▶ Run') : (play.textContent.includes('Pause') || play.textContent.includes('Pausar') && !play.textContent.includes('Run') ? '⏸ Pausar' : '▶ Rodar');
+    if(walk) walk.textContent = walk.textContent.includes('Hide') || walk.textContent.includes('Ocultar') ? (document.body.classList.contains('en') ? 'Hide random walk' : 'Ocultar caminhada aleatória') : (document.body.classList.contains('en') ? 'Show random walk' : 'Mostrar caminhada aleatória');
+  }
+
+  ptBtn.addEventListener('click', () => setLanguage('pt'));
+  enBtn.addEventListener('click', () => setLanguage('en'));
+
+  const saved = localStorage.getItem('difusao-language');
+  setLanguage(saved === 'en' ? 'en' : 'pt');
+})();
+</script>
+
+</body>
+</html>
